@@ -31,6 +31,19 @@
       return idStr;
     }
 
+    function commentToken() {
+      let char = next();
+      let comment = '';
+
+      while (char !== undefined && char !== '\n' && char !== '\r') {
+        comment += char;
+        index += 1;
+        char = next();
+      }
+
+      return comment;
+    }
+
     // this is the main function
     // It takes care of creating the right INDENT and DETENT tokens
     // the algorithm is taken from here - https://docs.python.org/3/reference/lexical_analysis.html
@@ -76,7 +89,6 @@
           // any dedent/outdent must match some previous indentation level.
           // otherwise it's a syntax error
           if (dedentLevelInStack === undefined) {
-            console.error('invalid indentation', indentStack, currentIndentLevel);
             throw new Error('Invalid indentation');
           }
 
@@ -147,11 +159,17 @@
         currentLine += 1;
         currentCol = 1;
         index += 1;
+      } else if (char === '#') {
+        const comment = commentToken();
+        addToken('COMMENT', comment);
       } else if (char === '&') {
         addToken('PARALLEL_STATE');
         index += 1;
       } else if (char === '$') {
         addToken('FINAL_STATE');
+        index += 1;
+      } else if (char === '*') {
+        addToken('INITIAL_STATE');
         index += 1;
       } else if (/[a-zA-Z0-9_]/.test(char)) {
         const id = identifierToken();
@@ -194,9 +212,44 @@
     return arr.reduce((acc, item) => ({ ...acc, ...item }), {});
   }
 
+  function withInitialState(stateInfo) {
+    const stateName = Object.keys(stateInfo)[0];
+    const nestedStates = stateInfo[stateName].states;
+    const nestedStateNames = Object.keys(nestedStates || {});
+
+    if (nestedStateNames && nestedStateNames.length > 0) {
+      const initialStateName = Object.entries(nestedStates).reduce(
+        (acc, [k, v]) => {
+          if (v.isInitial) {
+            return k;
+          } else {
+            return acc;
+          }
+        },
+        nestedStateNames[0],
+      );
+
+      return {
+        ...stateInfo,
+        [stateName]: {
+          ...stateInfo[stateName],
+          initial: initialStateName,
+        },
+      };
+    } else {
+      return stateInfo;
+    }
+  }
+
   // the main function. Just call this with the tokens
   function parse(inputStr) {
-    const tokens = tokenize(inputStr);
+    // 1. filter the comment tokens. Not useful for the parsing
+    // 2. We can also treat newlines as useless. They were only useful during
+    // the tokenizing phase because the INDENT and DEDENT tokens have be to be
+    // preceded by a NEWLINE. In the final grammar, newlines only complicate things
+    const tokens = tokenize(inputStr).filter(
+      t => t.type !== 'COMMENT' && t.type !== 'NEWLINE',
+    );
     let index = 0;
 
     const consume = () => tokens[index++];
@@ -257,26 +310,6 @@
       }
     }
 
-    // for cases like A -> B+
-    // where B can appear one or more times
-    function oneOrMore(fn) {
-      try {
-        const parserResult = fn();
-
-        return [parserResult].concat(zeroOrMore(fn));
-      } catch (e) {
-        return e;
-      }
-    }
-
-    function newline() {
-      if (consume().type === 'NEWLINE') {
-        return true;
-      }
-
-      throw new Error('Expected a NEWLINE');
-    }
-
     function identifier() {
       if (tokens[index].type === 'IDENTIFIER') {
         return consume().text;
@@ -295,6 +328,14 @@
 
     function finalState() {
       if (consume().type === 'FINAL_STATE') {
+        return true;
+      }
+
+      throw new Error('Expected PARALLEL_STATE');
+    }
+
+    function initialState() {
+      if (consume().type === 'INITIAL_STATE') {
         return true;
       }
 
@@ -339,7 +380,6 @@
       arrow();
       zeroOrMore(whitespace);
       const stateName = identifier();
-      zeroOrMore(newline);
 
       return {
         type: 'transition',
@@ -351,7 +391,7 @@
       const stateName = identifier();
       const parallel = zeroOrOne(parallelState);
       const isFinal = zeroOrOne(finalState);
-      zeroOrMore(newline);
+      const isInitial = zeroOrOne(initialState);
 
       return {
         [stateName]: {
@@ -361,6 +401,7 @@
               : isFinal.length > 0
               ? 'final'
               : undefined,
+          isInitial: isInitial.length > 0 ? true : undefined,
         },
       };
     }
@@ -373,15 +414,12 @@
       const stateName = identifier();
       const parallel = zeroOrOne(parallelState);
       const isFinal = zeroOrOne(finalState);
-      oneOrMore(newline);
+      const isInitial = zeroOrOne(initialState);
       indent();
       const transitionsAndStates = zeroOrMore(() => {
         return oneOrAnother(transition, stateParser);
       });
-      zeroOrOne(() => {
-        return oneOrMore(newline());
-      });
-      zeroOrMore(newline);
+      zeroOrMore(dedent);
 
       const transitions = transitionsAndStates.filter(
         ts => ts.type === 'transition',
@@ -398,6 +436,7 @@
               : isFinal.length > 0
               ? 'final'
               : undefined,
+          isInitial: isInitial.length > 0 ? true : undefined,
           on:
             transitions.length > 0
               ? omit(['type'], arrayOfObjToObj(transitions))
@@ -411,16 +450,9 @@
     function stateParser() {
       try {
         const stateInfo = oneOrAnother(stateWithMoreDetails, stateWithNameOnly);
-        zeroOrMore(dedent);
-        // const stateInfo = stateWithMoreDetails();
-        return stateInfo;
+
+        return withInitialState(stateInfo);
       } catch (e) {
-        console.error(
-          `Failed to parse: for token ${index}: \n`,
-          tokens[index],
-          '\nError: ',
-          e.message,
-        );
         throw new Error(e);
       }
     }
@@ -445,48 +477,52 @@
     return stateMachine();
   }
 
-  console.log("custom extension read", parse);
   let fancyEditor = document.createElement("div");
   let header = document.querySelector("header");
   const headerHeight = header.clientHeight;
 
-  console.log(`height: calc(100vh - ${headerHeight})`);
-  fancyEditor.style = `position: fixed; width: 400px; height: calc(100vh - ${headerHeight}px); right: 400px; top: ${headerHeight}px; font-size: 16px; display: flex; flex-direction: column`;
+  const EDITOR_WIDTH = "400px";
+  fancyEditor.style = `position: fixed; width: ${EDITOR_WIDTH}; height: calc(100vh - ${headerHeight}px); right: 400px; top: ${headerHeight}px; font-size: 16px; display: flex; flex-direction: column`;
+
+  const buttonStyle = {
+    width: "100%",
+    "text-align": "center",
+    height: "2rem",
+    color: "white",
+    "text-transform": "uppercase",
+    "font-weight": "bold",
+    background: "rgb(101, 101, 101)",
+    border: "none",
+    cursor: "pointer"
+  };
+
+  function styleMap(styles) {
+    return Object.entries(styles)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(";");
+  }
 
   const updateButtonHtml = `
   <button 
       id="sketch-update-button"
-      style=${`
-        width: 100%;
-        text-align: center;
-        height: 2rem;
-        color: white;
-        text-transform: uppercase;
-        font-weight: bold;
-        background: rgb(101, 101, 101)
-      `}
+      style="${styleMap(buttonStyle)}"
   >
-    Update-us
+    Transform
   </button>
 `;
 
+  // new
   const hideButtonHtml = `
   <button
     id="sketch-hide-editor-button"
-      style="
+      style="${styleMap(buttonStyle)};
+        width: auto;
         position: absolute;
         right: 0;
         z-index: 4;
         border-radius: 10px 0 0 10px;
-        border: none;
         padding: 10px;
         top: 10px;
-        text-align: center;
-        height: 2rem;
-        color: white;
-        text-transform: uppercase;
-        font-weight: bold;
-        background: rgb(101, 101, 101);
       ">
     Hide
   </button>
@@ -510,23 +546,35 @@
   editor.session.setMode("ace/mode/python");
   editor.focus();
 
+  function commentEveryLine(str) {
+    return (
+      "// sketch-systems like statechart description\n\n" +
+      str
+        .split(/[\n\r]/)
+        .map(s => `// ${s}`)
+        .join("\n")
+    );
+    // return str;
+  }
+
   function updateXstateEditor() {
     const inputStr = editor.getValue();
 
-    console.log({ inputStr });
     const machineConfig = parse(inputStr);
 
     if (machineConfig.error) {
       console.error("Error parsing string", machineConfig.error);
     } else {
       const xstateEditor = ace.edit("brace-editor");
-
       const outputText = `const machine = Machine(${JSON.stringify(
       machineConfig,
       null,
       2
     )})`;
-      xstateEditor.setValue(outputText);
+      xstateEditor.setValue(
+        `${commentEveryLine(inputStr)}\n\n ${outputText}`,
+        -1
+      );
 
       clickXstateEditorUpdateButton();
     }
@@ -548,9 +596,8 @@
   sketchUpdateButton.addEventListener("click", updateXstateEditor);
 
   function toggleEditorVisibility() {
-    console.log("hi");
     if (fancyEditor.clientWidth < 50) {
-      fancyEditor.style.width = "600px";
+      fancyEditor.style.width = EDITOR_WIDTH;
     } else {
       fancyEditor.style.width = "40px";
     }
@@ -561,5 +608,29 @@
   );
 
   sketchHideEditorButton.addEventListener("click", toggleEditorVisibility);
+
+  function hydrateEditorFromCache() {
+    const cachedStatechart = localStorage.getItem(
+      "sketch-systems-xstate-transformer"
+    );
+
+    if (cachedStatechart) {
+      // the second param 1 ensures that the whole text is not selected, which
+      // is the default behavior of ace editor
+      // 1 puts the cursor to the end of pasted value
+      editor.setValue(cachedStatechart, 1);
+    }
+  }
+
+  hydrateEditorFromCache();
+
+  function saveToLocalStorage() {
+    localStorage.setItem(
+      "sketch-systems-xstate-transformer",
+      editor.getValue() || ""
+    );
+  }
+
+  editor.on("change", saveToLocalStorage);
 
 })));
