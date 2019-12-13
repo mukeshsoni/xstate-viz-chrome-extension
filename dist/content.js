@@ -271,6 +271,18 @@
     }
   }
 
+  class ParserError extends Error {
+    constructor(token, ...params) {
+      super(...params);
+
+      if (Error.captureStackTrace) {
+        Error.captureStackTrace(this, ParserError);
+      }
+
+      this.token = token;
+    }
+  }
+
   // the main function. Just call this with the tokens
   function parse(inputStr) {
     const tokensToIgnore = ["COMMENT", "NEWLINE", "WS"];
@@ -303,7 +315,8 @@
       }
 
       // if none of the parsers worked
-      throw new Error(
+      throw new ParserError(
+        tokens[index],
         `oneOrAnother parser: matched none of the rules: ${args
         .map(fn => fn.name)
         .join(" | ")}`
@@ -341,12 +354,27 @@
       }
     }
 
+    // for cases like A -> B+
+    // where B can appear one or more times
+    function oneOrMore(fn) {
+      try {
+        const parserResult = fn();
+
+        return [parserResult].concat(zeroOrMore(fn));
+      } catch (e) {
+        return e;
+      }
+    }
+
     function identifier() {
       if (tokens[index].type === "IDENTIFIER") {
         return consume().text;
       }
 
-      throw new Error("Could not find IDENTIFIER. Instead found", tokens[index]);
+      throw new ParserError(
+        tokens[index],
+        `Could not find IDENTIFIER. Instead found ${tokens[index]}`
+      );
     }
 
     function condition() {
@@ -354,9 +382,9 @@
         return consume().text;
       }
 
-      throw new Error(
-        "Could not find CONDITION identifier. Instead found",
-        tokens[index]
+      throw new ParserError(
+        tokens[index],
+        `Could not find CONDITION identifier. Instead found ${tokens[index]}`
       );
     }
 
@@ -365,7 +393,7 @@
         return true;
       }
 
-      throw new Error("Expected PARALLEL_STATE");
+      throw new ParserError(tokens[index], "Expected PARALLEL_STATE");
     }
 
     function finalState() {
@@ -373,7 +401,7 @@
         return true;
       }
 
-      throw new Error("Expected PARALLEL_STATE");
+      throw new ParserError(tokens[index], "Expected PARALLEL_STATE");
     }
 
     function initialState() {
@@ -381,7 +409,7 @@
         return true;
       }
 
-      throw new Error("Expected PARALLEL_STATE");
+      throw new ParserError(tokens[index], "Expected PARALLEL_STATE");
     }
 
     function indent() {
@@ -389,7 +417,7 @@
         return true;
       }
 
-      throw new Error("Expected indent");
+      throw new ParserError(tokens[index], "Expected indent");
     }
 
     function dedent() {
@@ -397,7 +425,7 @@
         return true;
       }
 
-      throw new Error("Expected dedent");
+      throw new ParserError(tokens[index], "Expected dedent");
     }
 
     function arrow() {
@@ -405,7 +433,7 @@
         return true;
       }
 
-      throw new Error("expected arrow");
+      throw new ParserError(tokens[index], "expected arrow");
     }
 
     function transition() {
@@ -435,25 +463,6 @@
             : stateName
       };
     }
-
-    function stateWithNameOnly() {
-      const stateName = identifier();
-      const parallel = zeroOrOne(parallelState);
-      const isFinal = zeroOrOne(finalState);
-      const isInitial = zeroOrOne(initialState);
-
-      return {
-        [stateName]: {
-          type:
-            parallel.length > 0
-              ? "parallel"
-              : isFinal.length > 0
-              ? "final"
-              : undefined,
-          isInitial: isInitial.length > 0 ? true : undefined
-        }
-      };
-    }
     // like transitions, nested states etc.
     // e.g.
     // active
@@ -464,14 +473,21 @@
       const parallel = zeroOrOne(parallelState);
       const isFinal = zeroOrOne(finalState);
       const isInitial = zeroOrOne(initialState);
-      indent();
-      const transitionsAndStates = zeroOrMore(() => {
-        return oneOrAnother(transition, stateParser);
-      });
-      // any rule which has an indent should be always accompanied by a closing
-      // dedent. The indent and dedent have to match up, just like parentheses
-      // in other languages.
-      dedent();
+      const isIndentThere = zeroOrOne(indent);
+      let transitionsAndStates = [];
+
+      // if there is an indent after state name, it has to be state with
+      // extra info
+      if (isIndentThere.length > 0) {
+        transitionsAndStates = oneOrMore(() => {
+          return oneOrAnother(transition, stateParser);
+        });
+
+        // any rule which has an indent should be always accompanied by a closing
+        // dedent. The indent and dedent have to match up, just like parentheses
+        // in other languages.
+        dedent();
+      }
 
       const transitions = transitionsAndStates.filter(
         ts => ts.type === "transition"
@@ -501,11 +517,11 @@
 
     function stateParser() {
       try {
-        const stateInfo = oneOrAnother(stateWithMoreDetails, stateWithNameOnly);
+        const stateInfo = stateWithMoreDetails();
 
         return withInitialState(stateInfo);
       } catch (e) {
-        throw new Error(e);
+        throw new ParserError(tokens[index], e);
       }
     }
 
@@ -514,7 +530,12 @@
         const parserOutput = stateParser();
 
         const id = Object.keys(parserOutput)[0];
-        const initial = Object.keys(parserOutput[id].states)[0];
+
+        let initial = undefined;
+
+        if (parserOutput[id].states) {
+          initial = Object.keys(parserOutput[id].states)[0];
+        }
 
         return {
           id,

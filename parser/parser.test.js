@@ -165,4 +165,29 @@ describe("parser", () => {
     // console.log(JSON.stringify(ast, null, 2));
     expect(ast).toEqual(expectedXstateJSONFetch);
   });
+
+  it("should throw error when transition state not specified", () => {
+    // TODO: Without the newline check in the parser
+    // the below text is syntatically correct :(
+    const inputStr = `abc
+  def
+    lmn ->
+    -> lrt`;
+
+    // TODO: The below string is also accepted with current grammar
+    // This is because the rule
+    // oneOrAnother(stateWithMoreDetails, stateWithNameOnly);
+    // is also not correct. If a statename is followed by an indent, it should
+    // try to resolve a stateWithMoreDetails. Not backtrack and try state
+    // with name only
+    // const inputStr = `abc
+    // def
+    // lmn ->
+    // -> lrt`;
+    const ast = parse(inputStr);
+
+    console.log(ast.error.message, "\n", ast.error.token);
+    console.log(JSON.stringify(ast, null, 2));
+    expect(ast.error).toBeDefined();
+  });
 });

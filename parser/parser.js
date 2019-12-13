@@ -57,6 +57,18 @@ function withInitialState(stateInfo) {
   }
 }
 
+class ParserError extends Error {
+  constructor(token, ...params) {
+    super(...params);
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ParserError);
+    }
+
+    this.token = token;
+  }
+}
+
 // the main function. Just call this with the tokens
 export function parse(inputStr) {
   const tokensToIgnore = ["COMMENT", "NEWLINE", "WS"];
@@ -89,7 +101,8 @@ export function parse(inputStr) {
     }
 
     // if none of the parsers worked
-    throw new Error(
+    throw new ParserError(
+      tokens[index],
       `oneOrAnother parser: matched none of the rules: ${args
         .map(fn => fn.name)
         .join(" | ")}`
@@ -139,20 +152,15 @@ export function parse(inputStr) {
     }
   }
 
-  function newline() {
-    if (consume().type === "NEWLINE") {
-      return true;
-    }
-
-    throw new Error("Expected a NEWLINE");
-  }
-
   function identifier() {
     if (tokens[index].type === "IDENTIFIER") {
       return consume().text;
     }
 
-    throw new Error("Could not find IDENTIFIER. Instead found", tokens[index]);
+    throw new ParserError(
+      tokens[index],
+      `Could not find IDENTIFIER. Instead found ${tokens[index]}`
+    );
   }
 
   function condition() {
@@ -160,9 +168,9 @@ export function parse(inputStr) {
       return consume().text;
     }
 
-    throw new Error(
-      "Could not find CONDITION identifier. Instead found",
-      tokens[index]
+    throw new ParserError(
+      tokens[index],
+      `Could not find CONDITION identifier. Instead found ${tokens[index]}`
     );
   }
 
@@ -171,7 +179,7 @@ export function parse(inputStr) {
       return true;
     }
 
-    throw new Error("Expected PARALLEL_STATE");
+    throw new ParserError(tokens[index], "Expected PARALLEL_STATE");
   }
 
   function finalState() {
@@ -179,7 +187,7 @@ export function parse(inputStr) {
       return true;
     }
 
-    throw new Error("Expected PARALLEL_STATE");
+    throw new ParserError(tokens[index], "Expected PARALLEL_STATE");
   }
 
   function initialState() {
@@ -187,7 +195,7 @@ export function parse(inputStr) {
       return true;
     }
 
-    throw new Error("Expected PARALLEL_STATE");
+    throw new ParserError(tokens[index], "Expected PARALLEL_STATE");
   }
 
   function indent() {
@@ -195,7 +203,7 @@ export function parse(inputStr) {
       return true;
     }
 
-    throw new Error("Expected indent");
+    throw new ParserError(tokens[index], "Expected indent");
   }
 
   function dedent() {
@@ -203,7 +211,7 @@ export function parse(inputStr) {
       return true;
     }
 
-    throw new Error("Expected dedent");
+    throw new ParserError(tokens[index], "Expected dedent");
   }
 
   function arrow() {
@@ -211,7 +219,7 @@ export function parse(inputStr) {
       return true;
     }
 
-    throw new Error("expected arrow");
+    throw new ParserError(tokens[index], "expected arrow");
   }
 
   function transition() {
@@ -270,14 +278,21 @@ export function parse(inputStr) {
     const parallel = zeroOrOne(parallelState);
     const isFinal = zeroOrOne(finalState);
     const isInitial = zeroOrOne(initialState);
-    indent();
-    const transitionsAndStates = zeroOrMore(() => {
-      return oneOrAnother(transition, stateParser);
-    });
-    // any rule which has an indent should be always accompanied by a closing
-    // dedent. The indent and dedent have to match up, just like parentheses
-    // in other languages.
-    dedent();
+    const isIndentThere = zeroOrOne(indent);
+    let transitionsAndStates = [];
+
+    // if there is an indent after state name, it has to be state with
+    // extra info
+    if (isIndentThere.length > 0) {
+      transitionsAndStates = oneOrMore(() => {
+        return oneOrAnother(transition, stateParser);
+      });
+
+      // any rule which has an indent should be always accompanied by a closing
+      // dedent. The indent and dedent have to match up, just like parentheses
+      // in other languages.
+      dedent();
+    }
 
     const transitions = transitionsAndStates.filter(
       ts => ts.type === "transition"
@@ -307,11 +322,11 @@ export function parse(inputStr) {
 
   function stateParser() {
     try {
-      const stateInfo = oneOrAnother(stateWithMoreDetails, stateWithNameOnly);
+      const stateInfo = stateWithMoreDetails();
 
       return withInitialState(stateInfo);
     } catch (e) {
-      throw new Error(e);
+      throw new ParserError(tokens[index], e);
     }
   }
 
@@ -320,7 +335,12 @@ export function parse(inputStr) {
       const parserOutput = stateParser();
 
       const id = Object.keys(parserOutput)[0];
-      const initial = Object.keys(parserOutput[id].states)[0];
+
+      let initial = undefined;
+
+      if (parserOutput[id].states) {
+        initial = Object.keys(parserOutput[id].states)[0];
+      }
 
       return {
         id,
