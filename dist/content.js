@@ -603,6 +603,22 @@
 
   fancyEditor.innerHTML = `
   <div id="sketch-systems-editor" style="flex: 1"></div>
+  <div 
+    id="sketch-systems-success-message"
+    style="
+      color: green;
+      display: none;
+    "
+  >
+    Transformed successfully!
+  </div>
+  <div 
+    id="sketch-systems-error-pane"
+    style="
+      color: red;
+    "
+  >
+  </div>
   <div style="width: 100%; padding: 10px; ">
     ${updateButtonHtml}
   </div>
@@ -630,6 +646,35 @@
     // return str;
   }
 
+  function hideSuccessMessagePane() {
+    const successMessagePane = document.getElementById(
+      "sketch-systems-success-message"
+    );
+
+    successMessagePane.style.display = "none";
+  }
+
+  function showSuccessMessagePane() {
+    const successMessagePane = document.getElementById(
+      "sketch-systems-success-message"
+    );
+
+    successMessagePane.style.display = "block";
+  }
+
+  function showError(error) {
+    hideSuccessMessagePane();
+    const errorPane = document.getElementById("sketch-systems-error-pane");
+
+    errorPane.innerHTML = `<div>${error.message}</div><div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
+  }
+
+  function clearErrorPane() {
+    const errorPane = document.getElementById("sketch-systems-error-pane");
+
+    errorPane.innerHTML = "";
+  }
+
   function updateXstateEditor() {
     const inputStr = editor.getValue();
 
@@ -637,7 +682,10 @@
 
     if (machineConfig.error) {
       console.error("Error parsing string", machineConfig.error);
+      showError(machineConfig.error);
     } else {
+      clearErrorPane();
+      showSuccessMessagePane();
       const xstateEditor = ace.edit("brace-editor");
       const outputText = `const machine = Machine(${JSON.stringify(
       machineConfig,
@@ -704,6 +752,9 @@
     );
   }
 
-  editor.on("change", saveToLocalStorage);
+  editor.on("change", () => {
+    saveToLocalStorage();
+    hideSuccessMessagePane();
+  });
 
 })));
