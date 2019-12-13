@@ -1,4 +1,7 @@
-import { tokenize } from './tokenizer';
+import { tokenize } from "./tokenizer";
+
+// TODO: What if instead of throwing exceptions, each of the parsers returned
+// a Result type. The result type will encapsulate the possibility of failure
 
 // omit certain properties from an Object
 // the keys arguments contains array of strings which are
@@ -11,7 +14,18 @@ function omit(keys, obj) {
 
 // merges array of objects into a single object
 function arrayOfObjToObj(arr) {
-  return arr.reduce((acc, item) => ({ ...acc, ...item }), {});
+  return arr.reduce((acc, item) => {
+    // in case of transient states, we will have { '': { target: 'abc', cond: xyz } } kind of transitions. And they need to be merged for all '' appearances
+    // They need to be merged into an array
+    if (Object.keys(item).includes("")) {
+      return {
+        ...acc,
+        "": acc[""] ? acc[""].concat(item[""]) : [item[""]]
+      };
+    } else {
+      return { ...acc, ...item };
+    }
+  }, {});
 }
 
 function withInitialState(stateInfo) {
@@ -28,15 +42,15 @@ function withInitialState(stateInfo) {
           return acc;
         }
       },
-      nestedStateNames[0],
+      nestedStateNames[0]
     );
 
     return {
       ...stateInfo,
       [stateName]: {
         ...stateInfo[stateName],
-        initial: initialStateName,
-      },
+        initial: initialStateName
+      }
     };
   } else {
     return stateInfo;
@@ -45,12 +59,13 @@ function withInitialState(stateInfo) {
 
 // the main function. Just call this with the tokens
 export function parse(inputStr) {
+  const tokensToIgnore = ["COMMENT", "NEWLINE", "WS"];
   // 1. filter the comment tokens. Not useful for the parsing
   // 2. We can also treat newlines as useless. They were only useful during
   // the tokenizing phase because the INDENT and DEDENT tokens have be to be
   // preceded by a NEWLINE. In the final grammar, newlines only complicate things
   const tokens = tokenize(inputStr).filter(
-    t => t.type !== 'COMMENT' && t.type !== 'NEWLINE',
+    t => !tokensToIgnore.includes(t.type)
   );
   let index = 0;
 
@@ -77,7 +92,7 @@ export function parse(inputStr) {
     throw new Error(
       `oneOrAnother parser: matched none of the rules: ${args
         .map(fn => fn.name)
-        .join(' | ')}`,
+        .join(" | ")}`
     );
   }
 
@@ -125,102 +140,105 @@ export function parse(inputStr) {
   }
 
   function newline() {
-    if (consume().type === 'NEWLINE') {
+    if (consume().type === "NEWLINE") {
       return true;
     }
 
-    throw new Error('Expected a NEWLINE');
+    throw new Error("Expected a NEWLINE");
   }
 
   function identifier() {
-    if (tokens[index].type === 'IDENTIFIER') {
+    if (tokens[index].type === "IDENTIFIER") {
       return consume().text;
     }
 
-    throw new Error('Could not find IDENTIFIER. Instead found', tokens[index]);
+    throw new Error("Could not find IDENTIFIER. Instead found", tokens[index]);
   }
 
   function condition() {
-    if (tokens[index].type === 'CONDITION') {
+    if (tokens[index].type === "CONDITION") {
       return consume().text;
     }
 
     throw new Error(
-      'Could not find CONDITION identifier. Instead found',
-      tokens[index],
+      "Could not find CONDITION identifier. Instead found",
+      tokens[index]
     );
   }
 
   function parallelState() {
-    if (consume().type === 'PARALLEL_STATE') {
+    if (consume().type === "PARALLEL_STATE") {
       return true;
     }
 
-    throw new Error('Expected PARALLEL_STATE');
+    throw new Error("Expected PARALLEL_STATE");
   }
 
   function finalState() {
-    if (consume().type === 'FINAL_STATE') {
+    if (consume().type === "FINAL_STATE") {
       return true;
     }
 
-    throw new Error('Expected PARALLEL_STATE');
+    throw new Error("Expected PARALLEL_STATE");
   }
 
   function initialState() {
-    if (consume().type === 'INITIAL_STATE') {
+    if (consume().type === "INITIAL_STATE") {
       return true;
     }
 
-    throw new Error('Expected PARALLEL_STATE');
+    throw new Error("Expected PARALLEL_STATE");
   }
 
   function indent() {
-    if (consume().type === 'INDENT') {
+    if (consume().type === "INDENT") {
       return true;
     }
 
-    throw new Error('Expected indent');
+    throw new Error("Expected indent");
   }
 
   function dedent() {
-    if (consume().type === 'DEDENT') {
+    if (consume().type === "DEDENT") {
       return true;
     }
 
-    throw new Error('Expected dedent');
-  }
-
-  function whitespace() {
-    if (consume().type === 'WS') {
-      return true;
-    }
-
-    throw new Error('expected whitespace');
+    throw new Error("Expected dedent");
   }
 
   function arrow() {
-    if (consume().type === 'TRANSITION_ARROW') {
+    if (consume().type === "TRANSITION_ARROW") {
       return true;
     }
 
-    throw new Error('expected whitespace');
+    throw new Error("expected arrow");
   }
 
   function transition() {
-    const eventName = identifier();
-    zeroOrMore(whitespace);
+    // we might have arrow as start for transient states
+    const eventName = zeroOrOne(identifier) || "";
     arrow();
-    zeroOrMore(whitespace);
     const stateName = identifier();
-    const conditionName = zeroOrOne(condition);
+    let conditionName;
+
+    if (eventName) {
+      conditionName = zeroOrOne(condition);
+    } else {
+      // if the first event name was absent, the condition is mandatory
+      conditionName = condition();
+    }
 
     return {
-      type: 'transition',
+      type: "transition",
+      // TODO: What if we used the more verbose definition of each transition
+      // from the parser. { x: { target: 'y', cond: 'abc' }}. If we want to do
+      // any optimizations, like convert transitions without any conditions to
+      // shorter form, like { x: 'y' }, it can be done later on in one fell
+      // swoop
       [eventName]:
         conditionName.length > 0
           ? { target: stateName, cond: conditionName[0] }
-          : stateName,
+          : stateName
     };
   }
 
@@ -234,12 +252,12 @@ export function parse(inputStr) {
       [stateName]: {
         type:
           parallel.length > 0
-            ? 'parallel'
+            ? "parallel"
             : isFinal.length > 0
-            ? 'final'
+            ? "final"
             : undefined,
-        isInitial: isInitial.length > 0 ? true : undefined,
-      },
+        isInitial: isInitial.length > 0 ? true : undefined
+      }
     };
   }
   // like transitions, nested states etc.
@@ -256,31 +274,34 @@ export function parse(inputStr) {
     const transitionsAndStates = zeroOrMore(() => {
       return oneOrAnother(transition, stateParser);
     });
-    zeroOrMore(dedent);
+    // any rule which has an indent should be always accompanied by a closing
+    // dedent. The indent and dedent have to match up, just like parentheses
+    // in other languages.
+    dedent();
 
     const transitions = transitionsAndStates.filter(
-      ts => ts.type === 'transition',
+      ts => ts.type === "transition"
     );
     const nestedStates = transitionsAndStates.filter(
-      ts => ts.type !== 'transition',
+      ts => ts.type !== "transition"
     );
 
     return {
       [stateName]: {
         type:
           parallel.length > 0
-            ? 'parallel'
+            ? "parallel"
             : isFinal.length > 0
-            ? 'final'
+            ? "final"
             : undefined,
         isInitial: isInitial.length > 0 ? true : undefined,
         on:
           transitions.length > 0
-            ? omit(['type'], arrayOfObjToObj(transitions))
+            ? omit(["type"], arrayOfObjToObj(transitions))
             : undefined,
         states:
-          nestedStates.length > 0 ? arrayOfObjToObj(nestedStates) : undefined,
-      },
+          nestedStates.length > 0 ? arrayOfObjToObj(nestedStates) : undefined
+      }
     };
   }
 
@@ -304,7 +325,7 @@ export function parse(inputStr) {
       return {
         id,
         initial,
-        ...parserOutput[id],
+        ...parserOutput[id]
       };
     } catch (e) {
       return { error: e };
@@ -313,4 +334,3 @@ export function parse(inputStr) {
 
   return stateMachine();
 }
-
