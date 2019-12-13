@@ -5,12 +5,16 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup --config",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "rollup": "^1.27.9"
+    "rollup": "^1.27.9",
+    "jest": "^24.9.0",
+    "@babel/core": "^7.7.5",
+    "@babel/preset-env": "^7.7.6",
+    "babel-jest": "^24.9.0"
   }
 }

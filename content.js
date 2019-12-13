@@ -1,4 +1,4 @@
-import { parse } from "../sketch-systems-to-xstate-parser/parser";
+import { parse } from "./parser/parser";
 
 let fancyEditor = document.createElement("div");
 let header = document.querySelector("header");
