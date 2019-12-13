@@ -3,20 +3,42 @@ import { parse } from "./parser/parser";
 let fancyEditor = document.createElement("div");
 let header = document.querySelector("header");
 const headerHeight = header.clientHeight;
+const MIN_WIDTH = 200;
+const MAX_WIDTH = 1000;
+let EDITOR_WIDTH = 400;
 
-const EDITOR_WIDTH = "400px";
-fancyEditor.style = `position: fixed; width: ${EDITOR_WIDTH}; height: calc(100vh - ${headerHeight}px); right: 400px; top: ${headerHeight}px; font-size: 16px; display: flex; flex-direction: column`;
+function getEditorRight() {
+  return (
+    window.innerWidth -
+    document
+      .getElementById("brace-editor")
+      .parentNode.parentNode.getBoundingClientRect().right +
+    document
+      .getElementById("brace-editor")
+      .parentNode.parentNode.getBoundingClientRect().width
+  );
+}
+
+fancyEditor.style = `
+  position: fixed;
+  width: ${EDITOR_WIDTH}px;
+  height: calc(100vh - ${headerHeight}px);
+  right: ${getEditorRight()}px;
+  top: ${headerHeight}px;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column`;
 
 const buttonStyle = {
   width: "100%",
   "text-align": "center",
-  height: "2rem",
   color: "white",
   "text-transform": "uppercase",
   "font-weight": "bold",
   background: "rgb(101, 101, 101)",
   border: "none",
-  cursor: "pointer"
+  cursor: "pointer",
+  padding: "5px 10px"
 };
 
 function styleMap(styles) {
@@ -40,24 +62,53 @@ const hideButtonHtml = `
     id="sketch-hide-editor-button"
       style="${styleMap(buttonStyle)};
         width: auto;
-        position: absolute;
-        right: 0;
         z-index: 4;
-        border-radius: 10px 0 0 10px;
-        padding: 10px;
-        top: 10px;
+        border-radius: 10px;
+        padding: 5px 10px;
+        margin-left: 20px;
+        border: 1px solid white;
       ">
     Hide
   </button>
 `;
 
+const headerHtml = `
+  <header
+    style="
+      background: rgb(101, 101, 101);
+      padding: 5px 10px;
+      color: white;
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+    ">
+    ${hideButtonHtml} 
+    <label style="display: flex; border: 1px solid white; padding: 3px 10px;">
+      width
+      <input 
+        id='sketch-systems-width-input'
+        type='range'
+        min='${MIN_WIDTH}'
+        max='${MAX_WIDTH}'
+        value='${EDITOR_WIDTH}'
+        style="
+          margin-left: 10px;
+          width: 70px;
+        "
+      />
+    </label>
+  </header>
+`;
+
 fancyEditor.innerHTML = `
+  ${headerHtml}
   <div id="sketch-systems-editor" style="flex: 1"></div>
   <div 
     id="sketch-systems-success-message"
     style="
       color: green;
       display: none;
+      overflow-wrap: break-word;
     "
   >
     Transformed successfully!
@@ -72,7 +123,6 @@ fancyEditor.innerHTML = `
   <div style="width: 100%; padding: 10px; ">
     ${updateButtonHtml}
   </div>
-  ${hideButtonHtml}
 `;
 
 let drawingSection = document.querySelector("section");
@@ -168,7 +218,7 @@ sketchUpdateButton.addEventListener("click", updateXstateEditor);
 
 function toggleEditorVisibility() {
   if (fancyEditor.clientWidth < 50) {
-    fancyEditor.style.width = EDITOR_WIDTH;
+    fancyEditor.style.width = `${EDITOR_WIDTH}px`;
   } else {
     fancyEditor.style.width = "40px";
   }
@@ -205,4 +255,42 @@ function saveToLocalStorage() {
 editor.on("change", () => {
   saveToLocalStorage();
   hideSuccessMessagePane();
+});
+
+function adjustEditorPosition() {
+  fancyEditor.style.right = `${getEditorRight()}px`;
+}
+
+// in the xstate-editor the show/hide of the editor pane is done by
+// changing the data-layout attribute of the main tag
+// we want to reposition our editor based on change to that attribute
+var observer = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (
+      mutation.type == "attributes" &&
+      mutation.attributeName === "data-layout"
+    ) {
+      setTimeout(adjustEditorPosition, 500);
+    }
+  });
+});
+
+const mainElement = document.querySelector("main");
+observer.observe(mainElement, {
+  attributes: true //configure it to listen to attribute changes
+});
+
+const widthInputElement = document.getElementById("sketch-systems-width-input");
+
+widthInputElement.addEventListener("change", () => {
+  let newWidth = widthInputElement.value;
+
+  newWidth = parseInt(newWidth, 10);
+
+  if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
+    EDITOR_WIDTH = newWidth;
+    fancyEditor.style.width = `${EDITOR_WIDTH}px`;
+  } else {
+    console.log(`width has to be between ${MIN_WIDTH} and ${MAX_WIDTH} pixels`);
+  }
 });
