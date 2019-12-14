@@ -1,7 +1,8 @@
-(function (factory) {
-  typeof define === 'function' && define.amd ? define(factory) :
-  factory();
-}((function () { 'use strict';
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (global = global || self, factory(global.SketchSystemsParser = {}));
+}(this, (function (exports) { 'use strict';
 
   function last(arr) {
     return arr[arr.length - 1];
@@ -550,10 +551,6 @@
     return stateMachine();
   }
 
-  const MIN_WIDTH = 200;
-  const MAX_WIDTH = 1000;
-  let EDITOR_WIDTH = 400;
-
   function styleMap(styles) {
     return Object.entries(styles)
       .map(([k, v]) => `${k}: ${v}`)
@@ -610,6 +607,26 @@
     return Element("button", { ...attributes, style: buttonStyle }, children);
   }
 
+  function Input(props, children) {
+    return Element("input", props, children);
+  }
+
+  function HideButton() {
+    return Button(
+      {
+        id: "sketch-hide-editor-button",
+        style: {
+          width: "auto",
+          "z-index": 4,
+          "border-radius": "10px",
+          padding: "5px 10px",
+          "margin-left": "20px",
+          border: "1px solid white"
+        }
+      },
+      ["Hide"]
+    );
+  }
   const errorPaneId = "sketch-systems-error-pane";
   function clearErrorPane() {
     const errorPane = document.getElementById(errorPaneId);
@@ -687,26 +704,15 @@
     return sketchUpdateButton;
   }
 
-  function HideButton() {
-    return Button(
-      {
-        id: "sketch-hide-editor-button",
-        style: {
-          width: "auto",
-          "z-index": 4,
-          "border-radius": "10px",
-          padding: "5px 10px",
-          "margin-left": "20px",
-          border: "1px solid white"
-        }
-      },
-      ["Hide"]
-    );
-  }
-
-  function Input(props, children) {
-    return Element("input", props, children);
-  }
+  const transformButtonContainer = div(
+    {
+      style: {
+        width: "100%",
+        padding: "10px"
+      }
+    },
+    [TransformButton()]
+  );
 
   function WidthInput() {
     return Element(
@@ -750,13 +756,12 @@
       WidthInput()
     ]);
   }
-
   let extensionPane = document.createElement("div");
   let header = document.querySelector("header");
   const headerHeight = header.clientHeight;
-  const MIN_WIDTH$1 = 200;
-  const MAX_WIDTH$1 = 1000;
-  let EDITOR_WIDTH$1 = 400;
+  const MIN_WIDTH = 200;
+  const MAX_WIDTH = 1000;
+  let EDITOR_WIDTH = 400;
 
   function getEditorRight() {
     return (
@@ -772,7 +777,7 @@
 
   extensionPane.style = `
   position: fixed;
-  width: ${EDITOR_WIDTH$1}px;
+  width: ${EDITOR_WIDTH}px;
   height: calc(100vh - ${headerHeight}px);
   right: ${getEditorRight()}px;
   top: ${headerHeight}px;
@@ -780,16 +785,18 @@
   display: flex;
   flex-direction: column`;
 
+  const sketchSystemsEditorId = "sketch-systems-editor";
   const editorDiv = div({
-    id: "sketch-systems-editor",
+    id: sketchSystemsEditorId,
     style: {
       flex: 1
     }
   });
 
+  const sketchSystemsSuccessPaneId = "sketch-systems-success-message";
   const successDiv = div(
     {
-      id: "sketch-systems-success-message",
+      id: sketchSystemsSuccessPaneId,
       style: {
         color: "green",
         display: "none",
@@ -799,27 +806,20 @@
     ["Transformed successfully!"]
   );
 
+  const errorDivId = "sketch-systems-error-pane";
   const errorDiv = div({
-    id: "sketch-systems-error-pane",
+    id: errorDivId,
     style: {
       color: "red"
     }
   });
 
-  const transformButtonContainer = div({
-    style: {
-      width: "100%",
-      padding: "10px"
-    }
-  });
-
-  const sketchUpdateButton = TransformButton();
   const paneChildren = [
     Toolbar(),
     editorDiv,
     successDiv,
     errorDiv,
-    sketchUpdateButton
+    transformButtonContainer
   ];
 
   paneChildren.forEach(paneChild => extensionPane.appendChild(paneChild));
@@ -829,22 +829,29 @@
   // drawingSection.parentNode.insertBefore(extensionPane, drawingSection.nextSibling);
   document.body.appendChild(extensionPane);
 
-  var editor = ace.edit("sketch-systems-editor");
+  var editor = ace.edit(sketchSystemsEditorId);
   editor.setTheme("ace/theme/monokai");
   editor.session.setMode("ace/mode/python");
   editor.focus();
 
   function hideSuccessMessagePane() {
     const successMessagePane = document.getElementById(
-      "sketch-systems-success-message"
+      sketchSystemsSuccessPaneId
     );
 
     successMessagePane.style.display = "none";
   }
 
+  function showError(error) {
+    hideSuccessMessagePane();
+    const errorPane = document.getElementById("sketch-systems-error-pane");
+
+    errorPane.innerHTML = `<div>${error.message}</div><div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
+  }
+
   function toggleEditorVisibility() {
     if (extensionPane.clientWidth < 50) {
-      extensionPane.style.width = `${EDITOR_WIDTH$1}px`;
+      extensionPane.style.width = `${EDITOR_WIDTH}px`;
     } else {
       extensionPane.style.width = "40px";
     }
@@ -913,12 +920,18 @@
 
     newWidth = parseInt(newWidth, 10);
 
-    if (newWidth >= MIN_WIDTH$1 && newWidth <= MAX_WIDTH$1) {
-      EDITOR_WIDTH$1 = newWidth;
-      extensionPane.style.width = `${EDITOR_WIDTH$1}px`;
+    if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
+      EDITOR_WIDTH = newWidth;
+      extensionPane.style.width = `${EDITOR_WIDTH}px`;
     } else {
-      console.log(`width has to be between ${MIN_WIDTH$1} and ${MAX_WIDTH$1} pixels`);
+      console.log(`width has to be between ${MIN_WIDTH} and ${MAX_WIDTH} pixels`);
     }
   });
+
+  exports.HideButton = HideButton;
+  exports.Toolbar = Toolbar;
+  exports.TransformButton = TransformButton;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
