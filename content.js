@@ -64,7 +64,6 @@ const transformButtonContainer = div({
 });
 
 const sketchUpdateButton = TransformButton();
-sketchUpdateButton.addEventListener("click", updateXstateEditor);
 const paneChildren = [
   Toolbar(),
   editorDiv,
@@ -85,17 +84,6 @@ editor.setTheme("ace/theme/monokai");
 editor.session.setMode("ace/mode/python");
 editor.focus();
 
-function commentEveryLine(str) {
-  return (
-    "// sketch-systems like statechart description\n\n" +
-    str
-      .split(/[\n\r]/)
-      .map(s => `// ${s}`)
-      .join("\n")
-  );
-  // return str;
-}
-
 function hideSuccessMessagePane() {
   const successMessagePane = document.getElementById(
     "sketch-systems-success-message"
@@ -104,67 +92,12 @@ function hideSuccessMessagePane() {
   successMessagePane.style.display = "none";
 }
 
-function showSuccessMessagePane() {
-  const successMessagePane = document.getElementById(
-    "sketch-systems-success-message"
-  );
-
-  successMessagePane.style.display = "block";
-}
-
 function showError(error) {
   hideSuccessMessagePane();
   const errorPane = document.getElementById("sketch-systems-error-pane");
 
   errorPane.innerHTML = `<div>${error.message}</div><div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
 }
-
-function clearErrorPane() {
-  const errorPane = document.getElementById("sketch-systems-error-pane");
-
-  errorPane.innerHTML = "";
-}
-
-function updateXstateEditor() {
-  const inputStr = editor.getValue();
-
-  const machineConfig = parse(inputStr);
-
-  if (machineConfig.error) {
-    console.error("Error parsing string", machineConfig.error);
-    showError(machineConfig.error);
-  } else {
-    clearErrorPane();
-    showSuccessMessagePane();
-    const xstateEditor = ace.edit("brace-editor");
-    const outputText = `const machine = Machine(${JSON.stringify(
-      machineConfig,
-      null,
-      2
-    )})`;
-    xstateEditor.setValue(
-      `${commentEveryLine(inputStr)}\n\n ${outputText}`,
-      -1
-    );
-
-    clickXstateEditorUpdateButton();
-  }
-}
-
-function clickXstateEditorUpdateButton() {
-  const buttons = document.querySelectorAll("button");
-
-  const updateButton = Array.from(buttons).find(
-    b => b.textContent.toLowerCase() === "update"
-  );
-
-  if (updateButton && updateButton.click) {
-    updateButton.click();
-  }
-}
-
-// const sketchUpdateButton = document.getElementById("sketch-update-button");
-// sketchUpdateButton.addEventListener("click", updateXstateEditor);
 
 function toggleEditorVisibility() {
   if (extensionPane.clientWidth < 50) {

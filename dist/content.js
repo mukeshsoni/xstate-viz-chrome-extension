@@ -610,13 +610,81 @@
     return Element("button", { ...attributes, style: buttonStyle }, children);
   }
 
+  const errorPaneId = "sketch-systems-error-pane";
+  function clearErrorPane() {
+    const errorPane = document.getElementById(errorPaneId);
+
+    errorPane.innerHTML = "";
+  }
+
+  const successPaneId = "sketch-systems-success-message";
+  function showSuccessMessagePane() {
+    const successMessagePane = document.getElementById(successPaneId);
+
+    successMessagePane.style.display = "block";
+  }
+
+  function commentEveryLine(str) {
+    return (
+      "// sketch-systems like statechart description\n\n" +
+      str
+        .split(/[\n\r]/)
+        .map(s => `// ${s}`)
+        .join("\n")
+    );
+    // return str;
+  }
+
+  function clickXstateEditorUpdateButton() {
+    const buttons = document.querySelectorAll("button");
+
+    const updateButton = Array.from(buttons).find(
+      b => b.textContent.toLowerCase() === "update"
+    );
+
+    if (updateButton && updateButton.click) {
+      updateButton.click();
+    }
+  }
+
+  function updateXstateEditor() {
+    var editor = ace.edit("sketch-systems-editor");
+    const inputStr = editor.getValue();
+
+    const machineConfig = parse(inputStr);
+
+    if (machineConfig.error) {
+      console.error("Error parsing string", machineConfig.error);
+      showError(machineConfig.error);
+    } else {
+      clearErrorPane();
+      showSuccessMessagePane();
+      const xstateEditor = ace.edit("brace-editor");
+      const outputText = `const machine = Machine(${JSON.stringify(
+      machineConfig,
+      null,
+      2
+    )})`;
+      xstateEditor.setValue(
+        `${commentEveryLine(inputStr)}\n\n ${outputText}`,
+        -1
+      );
+
+      clickXstateEditorUpdateButton();
+    }
+  }
+
   function TransformButton() {
-    return Button(
+    const sketchUpdateButton = Button(
       {
         id: "sketch-update-button"
       },
       ["Transform"]
     );
+
+    sketchUpdateButton.addEventListener("click", updateXstateEditor);
+
+    return sketchUpdateButton;
   }
 
   function HideButton() {
@@ -746,7 +814,6 @@
   });
 
   const sketchUpdateButton = TransformButton();
-  sketchUpdateButton.addEventListener("click", updateXstateEditor);
   const paneChildren = [
     Toolbar(),
     editorDiv,
@@ -767,17 +834,6 @@
   editor.session.setMode("ace/mode/python");
   editor.focus();
 
-  function commentEveryLine(str) {
-    return (
-      "// sketch-systems like statechart description\n\n" +
-      str
-        .split(/[\n\r]/)
-        .map(s => `// ${s}`)
-        .join("\n")
-    );
-    // return str;
-  }
-
   function hideSuccessMessagePane() {
     const successMessagePane = document.getElementById(
       "sketch-systems-success-message"
@@ -785,68 +841,6 @@
 
     successMessagePane.style.display = "none";
   }
-
-  function showSuccessMessagePane() {
-    const successMessagePane = document.getElementById(
-      "sketch-systems-success-message"
-    );
-
-    successMessagePane.style.display = "block";
-  }
-
-  function showError(error) {
-    hideSuccessMessagePane();
-    const errorPane = document.getElementById("sketch-systems-error-pane");
-
-    errorPane.innerHTML = `<div>${error.message}</div><div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
-  }
-
-  function clearErrorPane() {
-    const errorPane = document.getElementById("sketch-systems-error-pane");
-
-    errorPane.innerHTML = "";
-  }
-
-  function updateXstateEditor() {
-    const inputStr = editor.getValue();
-
-    const machineConfig = parse(inputStr);
-
-    if (machineConfig.error) {
-      console.error("Error parsing string", machineConfig.error);
-      showError(machineConfig.error);
-    } else {
-      clearErrorPane();
-      showSuccessMessagePane();
-      const xstateEditor = ace.edit("brace-editor");
-      const outputText = `const machine = Machine(${JSON.stringify(
-      machineConfig,
-      null,
-      2
-    )})`;
-      xstateEditor.setValue(
-        `${commentEveryLine(inputStr)}\n\n ${outputText}`,
-        -1
-      );
-
-      clickXstateEditorUpdateButton();
-    }
-  }
-
-  function clickXstateEditorUpdateButton() {
-    const buttons = document.querySelectorAll("button");
-
-    const updateButton = Array.from(buttons).find(
-      b => b.textContent.toLowerCase() === "update"
-    );
-
-    if (updateButton && updateButton.click) {
-      updateButton.click();
-    }
-  }
-
-  // const sketchUpdateButton = document.getElementById("sketch-update-button");
-  // sketchUpdateButton.addEventListener("click", updateXstateEditor);
 
   function toggleEditorVisibility() {
     if (extensionPane.clientWidth < 50) {

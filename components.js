@@ -1,3 +1,4 @@
+import { parse } from "./parser/parser";
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 1000;
 let EDITOR_WIDTH = 400;
@@ -58,13 +59,81 @@ export function Button(attributes, children) {
   return Element("button", { ...attributes, style: buttonStyle }, children);
 }
 
+const errorPaneId = "sketch-systems-error-pane";
+function clearErrorPane() {
+  const errorPane = document.getElementById(errorPaneId);
+
+  errorPane.innerHTML = "";
+}
+
+const successPaneId = "sketch-systems-success-message";
+function showSuccessMessagePane() {
+  const successMessagePane = document.getElementById(successPaneId);
+
+  successMessagePane.style.display = "block";
+}
+
+function commentEveryLine(str) {
+  return (
+    "// sketch-systems like statechart description\n\n" +
+    str
+      .split(/[\n\r]/)
+      .map(s => `// ${s}`)
+      .join("\n")
+  );
+  // return str;
+}
+
+function clickXstateEditorUpdateButton() {
+  const buttons = document.querySelectorAll("button");
+
+  const updateButton = Array.from(buttons).find(
+    b => b.textContent.toLowerCase() === "update"
+  );
+
+  if (updateButton && updateButton.click) {
+    updateButton.click();
+  }
+}
+
+function updateXstateEditor() {
+  var editor = ace.edit("sketch-systems-editor");
+  const inputStr = editor.getValue();
+
+  const machineConfig = parse(inputStr);
+
+  if (machineConfig.error) {
+    console.error("Error parsing string", machineConfig.error);
+    showError(machineConfig.error);
+  } else {
+    clearErrorPane();
+    showSuccessMessagePane();
+    const xstateEditor = ace.edit("brace-editor");
+    const outputText = `const machine = Machine(${JSON.stringify(
+      machineConfig,
+      null,
+      2
+    )})`;
+    xstateEditor.setValue(
+      `${commentEveryLine(inputStr)}\n\n ${outputText}`,
+      -1
+    );
+
+    clickXstateEditorUpdateButton();
+  }
+}
+
 export function TransformButton() {
-  return Button(
+  const sketchUpdateButton = Button(
     {
       id: "sketch-update-button"
     },
     ["Transform"]
   );
+
+  sketchUpdateButton.addEventListener("click", updateXstateEditor);
+
+  return sketchUpdateButton;
 }
 
 export function HideButton() {
