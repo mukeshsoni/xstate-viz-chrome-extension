@@ -611,6 +611,20 @@
     return Element("input", props, children);
   }
 
+  const MIN_WIDTH = 200;
+  const MAX_WIDTH = 1000;
+  let EDITOR_WIDTH = 400;
+
+  const errorPaneId = "sketch-systems-error-pane";
+  const successPaneId = "sketch-systems-success-message";
+  const sketchSystemsEditorId = "sketch-systems-editor";
+  const sketchSystemsSuccessPaneId = "sketch-systems-success-message";
+  const errorDivId = "sketch-systems-error-pane";
+
+  let header = document.querySelector("header");
+  const headerHeight = header.clientHeight;
+  let drawingSection = document.querySelector("section");
+
   function HideButton() {
     return Button(
       {
@@ -627,14 +641,13 @@
       ["Hide"]
     );
   }
-  const errorPaneId = "sketch-systems-error-pane";
+
   function clearErrorPane() {
     const errorPane = document.getElementById(errorPaneId);
 
     errorPane.innerHTML = "";
   }
 
-  const successPaneId = "sketch-systems-success-message";
   function showSuccessMessagePane() {
     const successMessagePane = document.getElementById(successPaneId);
 
@@ -756,12 +769,32 @@
       WidthInput()
     ]);
   }
-  let extensionPane = document.createElement("div");
-  let header = document.querySelector("header");
-  const headerHeight = header.clientHeight;
-  const MIN_WIDTH = 200;
-  const MAX_WIDTH = 1000;
-  let EDITOR_WIDTH = 400;
+
+  const editorDiv = div({
+    id: sketchSystemsEditorId,
+    style: {
+      flex: 1
+    }
+  });
+
+  const successDiv = div(
+    {
+      id: sketchSystemsSuccessPaneId,
+      style: {
+        color: "green",
+        display: "none",
+        "overflow-wrap": "break-word"
+      }
+    },
+    ["Transformed successfully!"]
+  );
+
+  const errorDiv = div({
+    id: errorDivId,
+    style: {
+      color: "red"
+    }
+  });
 
   function getEditorRight() {
     return (
@@ -775,45 +808,6 @@
     );
   }
 
-  extensionPane.style = `
-  position: fixed;
-  width: ${EDITOR_WIDTH}px;
-  height: calc(100vh - ${headerHeight}px);
-  right: ${getEditorRight()}px;
-  top: ${headerHeight}px;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column`;
-
-  const sketchSystemsEditorId = "sketch-systems-editor";
-  const editorDiv = div({
-    id: sketchSystemsEditorId,
-    style: {
-      flex: 1
-    }
-  });
-
-  const sketchSystemsSuccessPaneId = "sketch-systems-success-message";
-  const successDiv = div(
-    {
-      id: sketchSystemsSuccessPaneId,
-      style: {
-        color: "green",
-        display: "none",
-        "overflow-wrap": "break-word"
-      }
-    },
-    ["Transformed successfully!"]
-  );
-
-  const errorDivId = "sketch-systems-error-pane";
-  const errorDiv = div({
-    id: errorDivId,
-    style: {
-      color: "red"
-    }
-  });
-
   const paneChildren = [
     Toolbar(),
     editorDiv,
@@ -822,14 +816,26 @@
     transformButtonContainer
   ];
 
-  paneChildren.forEach(paneChild => extensionPane.appendChild(paneChild));
-
-  let drawingSection = document.querySelector("section");
+  let extensionPane = div(
+    {
+      style: {
+        position: "fixed",
+        width: `${EDITOR_WIDTH}px`,
+        height: `calc(100vh - ${headerHeight}px)`,
+        right: `${getEditorRight()}px`,
+        top: `${headerHeight}px`,
+        "font-size": "16px",
+        display: "flex",
+        "flex-direction": "column"
+      }
+    },
+    paneChildren
+  );
 
   // drawingSection.parentNode.insertBefore(extensionPane, drawingSection.nextSibling);
   document.body.appendChild(extensionPane);
 
-  var editor = ace.edit(sketchSystemsEditorId);
+  let editor = ace.edit(sketchSystemsEditorId);
   editor.setTheme("ace/theme/monokai");
   editor.session.setMode("ace/mode/python");
   editor.focus();
