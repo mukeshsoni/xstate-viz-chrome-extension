@@ -1,6 +1,7 @@
 import { parse } from "./parser/parser";
+import { Element, div, Toolbar, TransformButton } from "./components";
 
-let fancyEditor = document.createElement("div");
+let extensionPane = document.createElement("div");
 let header = document.querySelector("header");
 const headerHeight = header.clientHeight;
 const MIN_WIDTH = 200;
@@ -19,7 +20,7 @@ function getEditorRight() {
   );
 }
 
-fancyEditor.style = `
+extensionPane.style = `
   position: fixed;
   width: ${EDITOR_WIDTH}px;
   height: calc(100vh - ${headerHeight}px);
@@ -29,106 +30,55 @@ fancyEditor.style = `
   display: flex;
   flex-direction: column`;
 
-const buttonStyle = {
-  width: "100%",
-  "text-align": "center",
-  color: "white",
-  "text-transform": "uppercase",
-  "font-weight": "bold",
-  background: "rgb(101, 101, 101)",
-  border: "none",
-  cursor: "pointer",
-  padding: "5px 10px"
-};
+const editorDiv = div({
+  id: "sketch-systems-editor",
+  style: {
+    flex: 1
+  }
+});
 
-function styleMap(styles) {
-  return Object.entries(styles)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join(";");
-}
+const successDiv = div(
+  {
+    id: "sketch-systems-success-message",
+    style: {
+      color: "green",
+      display: "none",
+      "overflow-wrap": "break-word"
+    }
+  },
+  ["Transformed successfully!"]
+);
 
-const updateButtonHtml = `
-  <button 
-      id="sketch-update-button"
-      style="${styleMap(buttonStyle)}"
-  >
-    Transform
-  </button>
-`;
+const errorDiv = div({
+  id: "sketch-systems-error-pane",
+  style: {
+    color: "red"
+  }
+});
 
-// new
-const hideButtonHtml = `
-  <button
-    id="sketch-hide-editor-button"
-      style="${styleMap(buttonStyle)};
-        width: auto;
-        z-index: 4;
-        border-radius: 10px;
-        padding: 5px 10px;
-        margin-left: 20px;
-        border: 1px solid white;
-      ">
-    Hide
-  </button>
-`;
+const transformButtonContainer = div({
+  style: {
+    width: "100%",
+    padding: "10px"
+  }
+});
 
-const headerHtml = `
-  <header
-    style="
-      background: rgb(101, 101, 101);
-      padding: 5px 10px;
-      color: white;
-      display: flex;
-      flex-direction: row-reverse;
-      align-items: center;
-    ">
-    ${hideButtonHtml} 
-    <label style="display: flex; border: 1px solid white; padding: 3px 10px;">
-      width
-      <input 
-        id='sketch-systems-width-input'
-        type='range'
-        min='${MIN_WIDTH}'
-        max='${MAX_WIDTH}'
-        value='${EDITOR_WIDTH}'
-        style="
-          margin-left: 10px;
-          width: 70px;
-        "
-      />
-    </label>
-  </header>
-`;
+const sketchUpdateButton = TransformButton();
+sketchUpdateButton.addEventListener("click", updateXstateEditor);
+const paneChildren = [
+  Toolbar(),
+  editorDiv,
+  successDiv,
+  errorDiv,
+  sketchUpdateButton
+];
 
-fancyEditor.innerHTML = `
-  ${headerHtml}
-  <div id="sketch-systems-editor" style="flex: 1"></div>
-  <div 
-    id="sketch-systems-success-message"
-    style="
-      color: green;
-      display: none;
-      overflow-wrap: break-word;
-    "
-  >
-    Transformed successfully!
-  </div>
-  <div 
-    id="sketch-systems-error-pane"
-    style="
-      color: red;
-    "
-  >
-  </div>
-  <div style="width: 100%; padding: 10px; ">
-    ${updateButtonHtml}
-  </div>
-`;
+paneChildren.forEach(paneChild => extensionPane.appendChild(paneChild));
 
 let drawingSection = document.querySelector("section");
 
-// drawingSection.parentNode.insertBefore(fancyEditor, drawingSection.nextSibling);
-document.body.appendChild(fancyEditor);
+// drawingSection.parentNode.insertBefore(extensionPane, drawingSection.nextSibling);
+document.body.appendChild(extensionPane);
 
 var editor = ace.edit("sketch-systems-editor");
 editor.setTheme("ace/theme/monokai");
@@ -213,14 +163,14 @@ function clickXstateEditorUpdateButton() {
   }
 }
 
-const sketchUpdateButton = document.getElementById("sketch-update-button");
-sketchUpdateButton.addEventListener("click", updateXstateEditor);
+// const sketchUpdateButton = document.getElementById("sketch-update-button");
+// sketchUpdateButton.addEventListener("click", updateXstateEditor);
 
 function toggleEditorVisibility() {
-  if (fancyEditor.clientWidth < 50) {
-    fancyEditor.style.width = `${EDITOR_WIDTH}px`;
+  if (extensionPane.clientWidth < 50) {
+    extensionPane.style.width = `${EDITOR_WIDTH}px`;
   } else {
-    fancyEditor.style.width = "40px";
+    extensionPane.style.width = "40px";
   }
 }
 
@@ -258,7 +208,7 @@ editor.on("change", () => {
 });
 
 function adjustEditorPosition() {
-  fancyEditor.style.right = `${getEditorRight()}px`;
+  extensionPane.style.right = `${getEditorRight()}px`;
 }
 
 // in the xstate-editor the show/hide of the editor pane is done by
@@ -289,7 +239,7 @@ widthInputElement.addEventListener("change", () => {
 
   if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
     EDITOR_WIDTH = newWidth;
-    fancyEditor.style.width = `${EDITOR_WIDTH}px`;
+    extensionPane.style.width = `${EDITOR_WIDTH}px`;
   } else {
     console.log(`width has to be between ${MIN_WIDTH} and ${MAX_WIDTH} pixels`);
   }

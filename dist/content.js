@@ -550,12 +550,145 @@
     return stateMachine();
   }
 
-  let fancyEditor = document.createElement("div");
-  let header = document.querySelector("header");
-  const headerHeight = header.clientHeight;
   const MIN_WIDTH = 200;
   const MAX_WIDTH = 1000;
   let EDITOR_WIDTH = 400;
+
+  function styleMap(styles) {
+    return Object.entries(styles)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(";");
+  }
+
+  // children always needs to be an array
+  function addChildrenToElement(el, children) {
+    if (children && children.length > 0) {
+      children.forEach(child => {
+        if (typeof child === "string") {
+          el.appendChild(document.createTextNode(child));
+        } else {
+          el.appendChild(child);
+        }
+      });
+    }
+  }
+
+  function Element(elName, attributes, children) {
+    const el = document.createElement(elName);
+
+    Object.keys(attributes).forEach(attr => {
+      el[attr] = attributes[attr];
+    });
+
+    // style attributes needs to be merged with
+    // default button styles
+    el.style = styleMap(attributes.style);
+
+    addChildrenToElement(el, children);
+
+    return el;
+  }
+
+  function div(attributes, children) {
+    return Element("div", attributes, children);
+  }
+
+  function Button(attributes, children) {
+    const buttonStyle = {
+      width: "100%",
+      "text-align": "center",
+      color: "white",
+      "text-transform": "uppercase",
+      "font-weight": "bold",
+      background: "rgb(101, 101, 101)",
+      border: "none",
+      cursor: "pointer",
+      padding: "5px 10px",
+      ...attributes.style
+    };
+
+    return Element("button", { ...attributes, style: buttonStyle }, children);
+  }
+
+  function TransformButton() {
+    return Button(
+      {
+        id: "sketch-update-button"
+      },
+      ["Transform"]
+    );
+  }
+
+  function HideButton() {
+    return Button(
+      {
+        id: "sketch-hide-editor-button",
+        style: {
+          width: "auto",
+          "z-index": 4,
+          "border-radius": "10px",
+          padding: "5px 10px",
+          "margin-left": "20px",
+          border: "1px solid white"
+        }
+      },
+      ["Hide"]
+    );
+  }
+
+  function Input(props, children) {
+    return Element("input", props, children);
+  }
+
+  function WidthInput() {
+    return Element(
+      "label",
+      {
+        style: {
+          display: "flex",
+          border: "1px solid white",
+          padding: "3px 10px"
+        }
+      },
+      [
+        "Width",
+        Input({
+          id: "sketch-systems-width-input",
+          type: "range",
+          min: MIN_WIDTH,
+          max: MAX_WIDTH,
+          value: EDITOR_WIDTH,
+          style: {
+            "margin-left": "10px",
+            width: "70px"
+          }
+        })
+      ]
+    );
+  }
+
+  function Toolbar() {
+    const headerStyles = {
+      background: "rgb(101, 101, 101)",
+      padding: "5px 10px",
+      color: "white",
+      display: "flex",
+      "flex-direction": "row-reverse",
+      "align-items": "center"
+    };
+
+    return Element("header", { style: headerStyles }, [
+      HideButton(),
+      WidthInput()
+    ]);
+  }
+
+  let extensionPane = document.createElement("div");
+  let header = document.querySelector("header");
+  const headerHeight = header.clientHeight;
+  const MIN_WIDTH$1 = 200;
+  const MAX_WIDTH$1 = 1000;
+  let EDITOR_WIDTH$1 = 400;
 
   function getEditorRight() {
     return (
@@ -569,9 +702,9 @@
     );
   }
 
-  fancyEditor.style = `
+  extensionPane.style = `
   position: fixed;
-  width: ${EDITOR_WIDTH}px;
+  width: ${EDITOR_WIDTH$1}px;
   height: calc(100vh - ${headerHeight}px);
   right: ${getEditorRight()}px;
   top: ${headerHeight}px;
@@ -579,106 +712,55 @@
   display: flex;
   flex-direction: column`;
 
-  const buttonStyle = {
-    width: "100%",
-    "text-align": "center",
-    color: "white",
-    "text-transform": "uppercase",
-    "font-weight": "bold",
-    background: "rgb(101, 101, 101)",
-    border: "none",
-    cursor: "pointer",
-    padding: "5px 10px"
-  };
+  const editorDiv = div({
+    id: "sketch-systems-editor",
+    style: {
+      flex: 1
+    }
+  });
 
-  function styleMap(styles) {
-    return Object.entries(styles)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(";");
-  }
+  const successDiv = div(
+    {
+      id: "sketch-systems-success-message",
+      style: {
+        color: "green",
+        display: "none",
+        "overflow-wrap": "break-word"
+      }
+    },
+    ["Transformed successfully!"]
+  );
 
-  const updateButtonHtml = `
-  <button 
-      id="sketch-update-button"
-      style="${styleMap(buttonStyle)}"
-  >
-    Transform
-  </button>
-`;
+  const errorDiv = div({
+    id: "sketch-systems-error-pane",
+    style: {
+      color: "red"
+    }
+  });
 
-  // new
-  const hideButtonHtml = `
-  <button
-    id="sketch-hide-editor-button"
-      style="${styleMap(buttonStyle)};
-        width: auto;
-        z-index: 4;
-        border-radius: 10px;
-        padding: 5px 10px;
-        margin-left: 20px;
-        border: 1px solid white;
-      ">
-    Hide
-  </button>
-`;
+  const transformButtonContainer = div({
+    style: {
+      width: "100%",
+      padding: "10px"
+    }
+  });
 
-  const headerHtml = `
-  <header
-    style="
-      background: rgb(101, 101, 101);
-      padding: 5px 10px;
-      color: white;
-      display: flex;
-      flex-direction: row-reverse;
-      align-items: center;
-    ">
-    ${hideButtonHtml} 
-    <label style="display: flex; border: 1px solid white; padding: 3px 10px;">
-      width
-      <input 
-        id='sketch-systems-width-input'
-        type='range'
-        min='${MIN_WIDTH}'
-        max='${MAX_WIDTH}'
-        value='${EDITOR_WIDTH}'
-        style="
-          margin-left: 10px;
-          width: 70px;
-        "
-      />
-    </label>
-  </header>
-`;
+  const sketchUpdateButton = TransformButton();
+  sketchUpdateButton.addEventListener("click", updateXstateEditor);
+  const paneChildren = [
+    Toolbar(),
+    editorDiv,
+    successDiv,
+    errorDiv,
+    sketchUpdateButton
+  ];
 
-  fancyEditor.innerHTML = `
-  ${headerHtml}
-  <div id="sketch-systems-editor" style="flex: 1"></div>
-  <div 
-    id="sketch-systems-success-message"
-    style="
-      color: green;
-      display: none;
-      overflow-wrap: break-word;
-    "
-  >
-    Transformed successfully!
-  </div>
-  <div 
-    id="sketch-systems-error-pane"
-    style="
-      color: red;
-    "
-  >
-  </div>
-  <div style="width: 100%; padding: 10px; ">
-    ${updateButtonHtml}
-  </div>
-`;
+  paneChildren.forEach(paneChild => extensionPane.appendChild(paneChild));
 
   let drawingSection = document.querySelector("section");
 
-  // drawingSection.parentNode.insertBefore(fancyEditor, drawingSection.nextSibling);
-  document.body.appendChild(fancyEditor);
+  // drawingSection.parentNode.insertBefore(extensionPane, drawingSection.nextSibling);
+  document.body.appendChild(extensionPane);
 
   var editor = ace.edit("sketch-systems-editor");
   editor.setTheme("ace/theme/monokai");
@@ -763,14 +845,14 @@
     }
   }
 
-  const sketchUpdateButton = document.getElementById("sketch-update-button");
-  sketchUpdateButton.addEventListener("click", updateXstateEditor);
+  // const sketchUpdateButton = document.getElementById("sketch-update-button");
+  // sketchUpdateButton.addEventListener("click", updateXstateEditor);
 
   function toggleEditorVisibility() {
-    if (fancyEditor.clientWidth < 50) {
-      fancyEditor.style.width = `${EDITOR_WIDTH}px`;
+    if (extensionPane.clientWidth < 50) {
+      extensionPane.style.width = `${EDITOR_WIDTH$1}px`;
     } else {
-      fancyEditor.style.width = "40px";
+      extensionPane.style.width = "40px";
     }
   }
 
@@ -808,7 +890,7 @@
   });
 
   function adjustEditorPosition() {
-    fancyEditor.style.right = `${getEditorRight()}px`;
+    extensionPane.style.right = `${getEditorRight()}px`;
   }
 
   // in the xstate-editor the show/hide of the editor pane is done by
@@ -837,11 +919,11 @@
 
     newWidth = parseInt(newWidth, 10);
 
-    if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
-      EDITOR_WIDTH = newWidth;
-      fancyEditor.style.width = `${EDITOR_WIDTH}px`;
+    if (newWidth >= MIN_WIDTH$1 && newWidth <= MAX_WIDTH$1) {
+      EDITOR_WIDTH$1 = newWidth;
+      extensionPane.style.width = `${EDITOR_WIDTH$1}px`;
     } else {
-      console.log(`width has to be between ${MIN_WIDTH} and ${MAX_WIDTH} pixels`);
+      console.log(`width has to be between ${MIN_WIDTH$1} and ${MAX_WIDTH$1} pixels`);
     }
   });
 
