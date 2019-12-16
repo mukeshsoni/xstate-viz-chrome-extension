@@ -216,7 +216,9 @@ let extensionPane = div(
       top: `${headerHeight}px`,
       "font-size": "16px",
       display: "flex",
-      "flex-direction": "column"
+      "flex-direction": "column",
+      // hide the pane by default on page load
+      visibility: "hidden"
     }
   },
   paneChildren
@@ -327,10 +329,4 @@ widthInputElement.addEventListener("change", () => {
   }
 });
 
-console.log(chrome.runtime);
 document.addEventListener("toggleSketchPane", toggleEditorVisibility);
-// chrome.runtime.onMessage.addListener(request => {
-// if (request.togglePane) {
-// toggleEditorVisibility();
-// }
-// });
