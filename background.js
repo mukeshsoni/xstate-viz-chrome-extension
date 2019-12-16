@@ -1,18 +1,13 @@
 chrome.runtime.onInstalled.addListener(function() {
-  chrome.storage.sync.set({ color: "hotpink" }, () => {
-    console.log("color set to gray");
-  });
+  chrome.pageAction.onClicked.addListener(function() {
+    console.log("page action clicked");
 
-  chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
-    chrome.declarativeContent.onPageChanged.addRules([
-      {
-        conditions: [
-          new chrome.declarativeContent.PageStateMatcher({
-            pageUrl: { hostEquals: "developer.chrome.com" }
-          })
-        ],
-        actions: [new chrome.declarativeContent.ShowPageAction()]
-      }
-    ]);
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { togglePane: true }, function(
+        response
+      ) {
+        console.log("got response", response);
+      });
+    });
   });
 });

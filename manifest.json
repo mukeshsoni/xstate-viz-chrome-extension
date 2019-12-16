@@ -2,13 +2,8 @@
   "name": "xtate viz with sketch systems",
   "version": "1.0",
   "description": "This extension allows xstate visualzier users to write their statecharts in simpler indent based text language and converts it to the json format which xstate understands",
-  "permissions": ["activeTab", "declarativeContent", "storage"],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
-  },
+  "permissions": ["tabs", "activeTab", "storage"],
   "page_action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "images/get_started16.png",
       "32": "images/get_started32.png",
@@ -16,18 +11,22 @@
       "128": "images/get_started128.png"
     }
   },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
   "content_scripts": [
     {
-      "matches": ["https://xstate.js.org/viz/*", "http://*/*"],
+      "matches": ["https://xstate.js.org/viz/*", "http://localhost:3000/*"],
       "js": ["inject.js"]
     }
   ],
   "web_accessible_resources": ["dist/content.js"],
+  "manifest_version": 2,
   "icons": {
     "16": "images/get_started16.png",
     "32": "images/get_started32.png",
     "48": "images/get_started48.png",
     "128": "images/get_started128.png"
-  },
-  "manifest_version": 2
+  }
 }

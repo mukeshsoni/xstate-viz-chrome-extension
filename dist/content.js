@@ -837,7 +837,7 @@
 
   let editor = ace.edit(sketchSystemsEditorId);
   editor.setTheme("ace/theme/monokai");
-  editor.session.setMode("ace/mode/python");
+  // editor.session.setMode("ace/mode/javascript");
   editor.focus();
 
   function hideSuccessMessagePane() {
@@ -856,10 +856,13 @@
   }
 
   function toggleEditorVisibility() {
-    if (extensionPane.clientWidth < 50) {
-      extensionPane.style.width = `${EDITOR_WIDTH}px`;
+    // if i use display: 'none' to hide the div, the ace editor
+    // does not show up when i then change it back to display: 'block'
+    // so using visibility property instead
+    if (extensionPane.style.visibility === "visible") {
+      extensionPane.style.visibility = "hidden";
     } else {
-      extensionPane.style.width = "40px";
+      extensionPane.style.visibility = "visible";
     }
   }
 
@@ -933,6 +936,14 @@
       console.log(`width has to be between ${MIN_WIDTH} and ${MAX_WIDTH} pixels`);
     }
   });
+
+  console.log(chrome.runtime);
+  document.addEventListener("toggleSketchPane", toggleEditorVisibility);
+  // chrome.runtime.onMessage.addListener(request => {
+  // if (request.togglePane) {
+  // toggleEditorVisibility();
+  // }
+  // });
 
   exports.HideButton = HideButton;
   exports.Toolbar = Toolbar;
