@@ -39,7 +39,6 @@ autocomplete
                 MOUSE_CLICK_ITEM -> #autocomplete.focused
                 not_selected*
                 selected
-
 ```
 
 To setup a development environement - 
