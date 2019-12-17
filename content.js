@@ -21,7 +21,6 @@ export function HideButton() {
       id: "sketch-hide-editor-button",
       style: {
         width: "auto",
-        "z-index": 4,
         "border-radius": "10px",
         padding: "5px 10px",
         "margin-left": "20px",
@@ -218,7 +217,7 @@ let extensionPane = div(
       display: "flex",
       "flex-direction": "column",
       // hide the pane by default on page load
-      visibility: "visible"
+      visibility: "hidden"
     }
   },
   paneChildren
