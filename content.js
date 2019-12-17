@@ -1,4 +1,5 @@
 import { parse } from "./parser/parser";
+import { tokenize } from "./parser/tokenizer";
 import { Element, div, Button, Input } from "./components";
 
 const MIN_WIDTH = 200;
@@ -71,6 +72,7 @@ function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
 
+  console.log(tokenize(inputStr));
   const machineConfig = parse(inputStr);
 
   if (machineConfig.error) {
@@ -218,7 +220,7 @@ let extensionPane = div(
       display: "flex",
       "flex-direction": "column",
       // hide the pane by default on page load
-      visibility: "hidden"
+      visibility: "visible"
     }
   },
   paneChildren

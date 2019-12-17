@@ -6,6 +6,41 @@ To use the extension, clone this repository and load it as unpacked extension in
 
 Instruction on how to load an unpacked extension in chrome can be found here - https://webkul.com/blog/how-to-install-the-unpacked-extension-in-chrome/.
 
+E.g. statechart representation in the textual langauge 
+
+```
+% statechart for autocomplete. This is a comment.
+% You can specify the type of state by adding some special character
+% at the end of the state name
+% * -> initial state
+% $ -> final state
+% & -> parallel state
+% A condition for a transition can be specified by using the semicolon 
+% separator. Look at the `match` state for example.
+% state names and transition names cannot have spaces in them
+% Only accepted characters are a-z, A-Z, #, ., 0-9, _
+autocomplete
+    blur* % This is an initial state
+        FOCUS -> focused
+    focused
+        BLUR -> blur
+        MOUSE_CLICK_OUTSIDE -> blur
+        CHANGE_TEXT -> focused.match
+        % below is a transient state
+        match*
+            -> list_hidden; shouldHideList
+            -> list.non_empty; matches
+            -> list.empty; doesNotMatch
+        list_hidden$
+        list
+            empty
+            non_empty
+                ARROW_KEY -> non_empty.selected
+                MOUSE_CLICK_ITEM -> #autocomplete.focused
+                not_selected*
+                selected
+
+```
 
 To setup a development environement - 
 

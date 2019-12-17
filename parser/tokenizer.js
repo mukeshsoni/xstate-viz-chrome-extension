@@ -12,11 +12,11 @@ export function tokenize(str) {
   let indentStack = [0];
   let currentLine = 1;
   let currentCol = 1;
-  const identifierRegex = /[a-zA-Z0-9_\.]/;
+  const identifierRegex = /[#a-zA-Z0-9_\.]/;
 
   function identifierToken() {
     let char = next();
-    let idStr = '';
+    let idStr = "";
 
     while (char !== undefined && identifierRegex.test(char)) {
       idStr += char;
@@ -29,9 +29,9 @@ export function tokenize(str) {
 
   function commentToken() {
     let char = next();
-    let comment = '';
+    let comment = "";
 
-    while (char !== undefined && char !== '\n' && char !== '\r') {
+    while (char !== undefined && char !== "\n" && char !== "\r") {
       comment += char;
       index += 1;
       char = next();
@@ -63,7 +63,7 @@ export function tokenize(str) {
 
     // only checking for previous token as NEWLINE does not take
     // care of the first line
-    if (prevTokenTypeCheck(tokens, 'NEWLINE')) {
+    if (prevTokenTypeCheck(tokens, "NEWLINE")) {
       const match = regex.exec(str.slice(index));
       let currentIndentLevel;
       if (match === null) {
@@ -83,21 +83,21 @@ export function tokenize(str) {
         indentStack.push(currentIndentLevel);
         return [
           {
-            type: 'INDENT',
+            type: "INDENT",
             line: currentLine,
             col: 1,
-            text: match[0],
-          },
+            text: match[0]
+          }
         ];
       } else if (currentIndentLevel < prevIndentLevel) {
         const dedentLevelInStack = indentStack.find(
-          n => n === currentIndentLevel,
+          n => n === currentIndentLevel
         );
 
         // any dedent/outdent must match some previous indentation level.
         // otherwise it's a syntax error
         if (dedentLevelInStack === undefined) {
-          throw new Error('Invalid indentation');
+          throw new Error("Invalid indentation");
         }
 
         // keep popping indentation levels from indent dedentLevelInStack
@@ -112,10 +112,10 @@ export function tokenize(str) {
         ) {
           indentStack.pop();
           dedentTokens.push({
-            type: 'DEDENT',
+            type: "DEDENT",
             line: currentLine,
-            text: match ? match[0] : '',
-            col: 1,
+            text: match ? match[0] : "",
+            col: 1
           });
 
           indentLevelFromStack = last(indentStack);
@@ -151,7 +151,7 @@ export function tokenize(str) {
       type,
       text,
       line: currentLine,
-      col: currentCol,
+      col: currentCol
     });
 
     currentCol += text ? text.length : 1;
@@ -162,42 +162,42 @@ export function tokenize(str) {
     // insert indent/dedent tokens
     tokens = tokens.concat(whitespaceTokenizer());
     const char = next();
-    if (char === '\n') {
-      addToken('NEWLINE');
+    if (char === "\n") {
+      addToken("NEWLINE");
       currentLine += 1;
       currentCol = 1;
       index += 1;
-    } else if (char === '#') {
+    } else if (char === "%") {
       const comment = commentToken();
-      addToken('COMMENT', comment);
-    } else if (char === '&') {
-      addToken('PARALLEL_STATE');
+      addToken("COMMENT", comment);
+    } else if (char === "&") {
+      addToken("PARALLEL_STATE");
       index += 1;
-    } else if (char === '$') {
-      addToken('FINAL_STATE');
+    } else if (char === "$") {
+      addToken("FINAL_STATE");
       index += 1;
-    } else if (char === '*') {
-      addToken('INITIAL_STATE');
+    } else if (char === "*") {
+      addToken("INITIAL_STATE");
       index += 1;
-    } else if (char === ';') {
+    } else if (char === ";") {
       // we expect a condition after the semicolon
       const conditionName = conditionToken();
-      addToken('CONDITION', conditionName);
-    } else if (/[a-zA-Z0-9_]/.test(char)) {
+      addToken("CONDITION", conditionName);
+    } else if (identifierRegex.test(char)) {
       const id = identifierToken();
-      addToken('IDENTIFIER', id);
+      addToken("IDENTIFIER", id);
       // TODO: this check will not work when a dedent removes all
       // whitespace from a line. i.e. a line starts from the beginning
       // of the line
-    } else if (char === ' ' || char === '\t') {
+    } else if (char === " " || char === "\t") {
       const wsTokens = whitespaceTokenizer();
       tokens = tokens.concat(wsTokens);
-    } else if (char === '-' && peek() === '>') {
-      addToken('TRANSITION_ARROW');
+    } else if (char === "-" && peek() === ">") {
+      addToken("TRANSITION_ARROW");
 
       index += 2;
     } else {
-      addToken('UNKNOWN', char);
+      addToken("UNKNOWN", char);
       index += 1;
     }
   }
@@ -205,8 +205,7 @@ export function tokenize(str) {
   // TODO - at the end of the tokenizing we need to pop out all remaining
   // indents from stack and push DEDENT tokens to our tokens list
   while (indentStack.length > 1 && indentStack.pop() > 0) {
-    tokens.push({ type: 'DEDENT', line: currentLine, col: currentCol });
+    tokens.push({ type: "DEDENT", line: currentLine, col: currentCol });
   }
   return tokens;
 }
-

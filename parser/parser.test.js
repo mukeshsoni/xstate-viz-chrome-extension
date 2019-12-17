@@ -2,17 +2,17 @@ import { tokenize } from "./tokenizer";
 import { parse } from "./parser";
 
 const inputStr = `abc
-# some comment
+% some comment
   def -> lmn
-  pasta -> noodles #more comment
+  pasta -> noodles %more comment
   ast&*
     opq -> rst; ifyes
-    uvw -> ast.opq
+    uvw -> #abc.lastState
     nestedstate1
     nestedstate2*
   tried -> that
   lastState
-    # trying out transient state
+    % trying out transient state
     -> ast; ifyes
     -> lastState; ifno`;
 
@@ -31,7 +31,7 @@ const expectedXstateJSON = {
       isInitial: true,
       on: {
         opq: { target: "rst", cond: "ifyes" },
-        uvw: "ast.opq"
+        uvw: "#abc.lastState"
       },
       states: {
         nestedstate1: {},
