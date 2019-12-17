@@ -1,5 +1,7 @@
 This is a chrome extension which adds an editor to [https://xstate.js.org/viz](https://xstate.js.org/viz). The editor allows writing statecharts in simpler textual language similar to [https://sketch.systems/](https://sketch.systems/).
 
+![Textual statechart gif](images/sketch_systems_to_xstate.gif)
+
 To use the extension, clone this repository and load it as unpacked extension in chrome. 
 
 Instruction on how to load an unpacked extension in chrome can be found here - https://webkul.com/blog/how-to-install-the-unpacked-extension-in-chrome/.
