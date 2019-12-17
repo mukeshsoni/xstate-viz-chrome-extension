@@ -39,6 +39,7 @@ autocomplete
                 MOUSE_CLICK_ITEM -> #autocomplete.focused
                 not_selected*
                 selected
+                  ENTER_KEY -> #autocomplete.focused
 ```
 
 To setup a development environement - 
