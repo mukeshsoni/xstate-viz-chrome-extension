@@ -681,7 +681,6 @@
     var editor = ace.edit("sketch-systems-editor");
     const inputStr = editor.getValue();
 
-    console.log(tokenize(inputStr));
     const machineConfig = parse(inputStr);
 
     if (machineConfig.error) {
