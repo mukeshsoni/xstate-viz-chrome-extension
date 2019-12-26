@@ -1,7 +1,9 @@
 function styleMap(styles) {
-  return Object.entries(styles)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join(";");
+  return styles
+    ? Object.entries(styles)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(";")
+    : "";
 }
 
 // children always needs to be an array

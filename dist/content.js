@@ -633,9 +633,11 @@
   }
 
   function styleMap(styles) {
-    return Object.entries(styles)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(";");
+    return styles
+      ? Object.entries(styles)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(";")
+      : "";
   }
 
   // children always needs to be an array
@@ -697,12 +699,16 @@
   const MIN_WIDTH = 200;
   const MAX_WIDTH = 1000;
   let EDITOR_WIDTH = 400;
+  let EDITOR_HEIGHT_RATIO = 50;
 
   const errorPaneId = "sketch-systems-error-pane";
   const successPaneId = "sketch-systems-success-message";
   const sketchSystemsEditorId = "sketch-systems-editor";
+  const sketchSystemsJsEditorId = "sketch-systems-js-editor";
   const sketchSystemsSuccessPaneId = "sketch-systems-success-message";
   const errorDivId = "sketch-systems-error-pane";
+  const mainEditorContainerId = "main-editor-container";
+  const jsEditorContainerId = "js-editor-container";
 
   let header = document.querySelector("header");
   const headerHeight = header.clientHeight;
@@ -802,7 +808,7 @@
     return sketchUpdateButton;
   }
 
-  const transformButtonContainer = div(
+  const TransformButtonContainer = div(
     {
       style: {
         width: "100%",
@@ -814,15 +820,21 @@
     [TransformButton()]
   );
 
+  const rangeInputLabelStyle = {
+    display: "flex",
+    "flex-direction": "column",
+    "justify-content": "flex-start",
+    border: "1px solid #888",
+    padding: "3px 10px",
+    "margin-left": "15px",
+    "font-size": "0.7rem"
+  };
+
   function WidthInput() {
     return Element(
       "label",
       {
-        style: {
-          display: "flex",
-          border: "1px solid white",
-          padding: "3px 10px"
-        }
+        style: rangeInputLabelStyle
       },
       [
         "Width",
@@ -833,12 +845,49 @@
           max: MAX_WIDTH,
           value: EDITOR_WIDTH,
           style: {
-            "margin-left": "10px",
             width: "70px"
           }
         })
       ]
     );
+  }
+
+  function EditorHeightAdjuster() {
+    const MIN_RATIO = 0;
+    const MAX_RATIO = 100;
+
+    const inputEl = Element(
+      "label",
+      {
+        style: rangeInputLabelStyle
+      },
+      [
+        "Height ratio",
+        Input({
+          id: "editor-height-adjuster",
+          type: "range",
+          min: MIN_RATIO,
+          max: MAX_RATIO,
+          value: EDITOR_HEIGHT_RATIO,
+          style: {
+            width: "70px"
+          }
+        })
+      ]
+    );
+
+    inputEl.addEventListener("change", e => {
+      const mainEditor = document.getElementById(mainEditorContainerId);
+      const jsEditor = document.getElementById(jsEditorContainerId);
+
+      const newRatio = e.target.value;
+
+      mainEditor.style.flex = newRatio;
+      jsEditor.style.flex = 100 - newRatio;
+      console.log("changed value", e.target.value);
+    });
+
+    return inputEl;
   }
 
   function Toolbar() {
@@ -853,12 +902,45 @@
 
     return Element("header", { style: headerStyles }, [
       HideButton(),
-      WidthInput()
+      WidthInput(),
+      EditorHeightAdjuster()
     ]);
+  }
+
+  function EditorHeader(heading) {
+    return Element(
+      "header",
+      {
+        style: {
+          background: "#272722",
+          color: "#fff",
+          padding: "5px 10px",
+          "border-bottom": "1px solid #333333"
+        }
+      },
+      [heading]
+    );
+  }
+
+  function EditorContainer(id, heading, editorEl) {
+    return div(
+      {
+        id,
+        style: { display: "flex", "flex-direction": "column", flex: 1 }
+      },
+      [EditorHeader(heading), editorEl]
+    );
   }
 
   const editorDiv = div({
     id: sketchSystemsEditorId,
+    style: {
+      flex: 1
+    }
+  });
+
+  const jsEditorDiv = div({
+    id: sketchSystemsJsEditorId,
     style: {
       flex: 1
     }
@@ -897,10 +979,11 @@
 
   const paneChildren = [
     Toolbar(),
-    editorDiv,
+    EditorContainer(mainEditorContainerId, "Main editor", editorDiv),
+    EditorContainer(jsEditorContainerId, "JS Editor", jsEditorDiv),
     successDiv,
     errorDiv,
-    transformButtonContainer
+    TransformButtonContainer
   ];
 
   let extensionPane = div(
@@ -929,6 +1012,9 @@
   // editor.session.setMode("ace/mode/javascript");
   editor.session.setMode("ace/mode/sketch");
   editor.focus();
+  let jsEditor = ace.edit(sketchSystemsJsEditorId);
+  jsEditor.setTheme("ace/theme/monokai");
+  jsEditor.session.setMode("ace/mode/javascript");
 
   function hideSuccessMessagePane() {
     const successMessagePane = document.getElementById(
