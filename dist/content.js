@@ -20989,7 +20989,14 @@ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgb
   function updateXstateEditor() {
     var editor = brace.edit("sketch-systems-editor");
     const inputStr = editor.getValue();
-    // jsEditor.setValue(prettier.format(jsEditor.getValue()));
+    jsEditor.setValue(
+      // have injected prettier standalone in the inject script. When the extension loads
+      prettier.format(jsEditor.getValue(), {
+        parser: "babylon",
+        plugins: prettierPlugins
+      }),
+      1
+    );
     const jsInputStr = jsEditor.getValue();
 
     const machineConfigObj = parse(inputStr);
@@ -21110,7 +21117,6 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
 
       mainEditor.style.flex = newRatio;
       jsEditor.style.flex = 100 - newRatio;
-      console.log("changed value", e.target.value);
     });
 
     return inputEl;

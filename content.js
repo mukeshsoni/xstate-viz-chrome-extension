@@ -1,4 +1,5 @@
 import ace from "brace";
+
 import "brace/theme/monokai";
 // custom ace mode for highlighting our language
 import "./ace_mode_sketch";
@@ -77,7 +78,14 @@ function clickXstateEditorUpdateButton() {
 function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
-  // jsEditor.setValue(prettier.format(jsEditor.getValue()));
+  jsEditor.setValue(
+    // have injected prettier standalone in the inject script. When the extension loads
+    prettier.format(jsEditor.getValue(), {
+      parser: "babylon",
+      plugins: prettierPlugins
+    }),
+    1
+  );
   const jsInputStr = jsEditor.getValue();
 
   const machineConfigObj = parse(inputStr);
@@ -198,7 +206,6 @@ function EditorHeightAdjuster() {
 
     mainEditor.style.flex = newRatio;
     jsEditor.style.flex = 100 - newRatio;
-    console.log("changed value", e.target.value);
   });
 
   return inputEl;

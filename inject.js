@@ -13,6 +13,8 @@ function injectScript(file_path, tag) {
   node.appendChild(script);
 }
 
+injectScript("https://unpkg.com/prettier@1.19.1/standalone.js", "body");
+injectScript("https://unpkg.com/prettier@1.19.1/parser-babylon.js", "body");
 injectScript(chrome.extension.getURL("dist/content.js"), "body");
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
