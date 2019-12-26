@@ -20999,7 +20999,7 @@ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgb
     );
     const jsInputStr = jsEditor.getValue();
 
-    const machineConfigObj = parse(inputStr);
+    const machineConfigObj = parse(inputStr.trim());
 
     if (machineConfigObj.error) {
       console.error("Error parsing string", machineConfigObj.error);

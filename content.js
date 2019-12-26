@@ -88,7 +88,7 @@ function updateXstateEditor() {
   );
   const jsInputStr = jsEditor.getValue();
 
-  const machineConfigObj = parse(inputStr);
+  const machineConfigObj = parse(inputStr.trim());
 
   if (machineConfigObj.error) {
     console.error("Error parsing string", machineConfigObj.error);
