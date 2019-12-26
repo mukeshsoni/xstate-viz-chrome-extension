@@ -47,15 +47,18 @@ ace.define(
           },
           {
             token: "comment",
-            regex: /%.+/
+            regex: /%.*$/
           },
           {
-            token: "blahdiblah",
+            token: "keyword.operator",
             regex: /->/
           },
           // We can validate the headers with regex
           {
-            token: ["keyword", "comment", "text"],
+            // ace has predefined css for ace_entity.ace_name.ace_function
+            // selector. We can probably add ace_state and then set the
+            // token as entity.name.state
+            token: "entity.name.function",
             regex: /[a-zA-Z0-9_]+/
           },
           {
