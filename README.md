@@ -16,6 +16,7 @@ E.g. statechart representation in the textual langauge
 % $ -> final state
 % & -> parallel state
 % A condition for a transition can be specified by using the semicolon 
+% actions to be run on a transition can be specified by using a >. E.g. EVENT -> state > action1 > action2
 % separator. Look at the `match` state for example.
 % state names and transition names cannot have spaces in them
 % Only accepted characters are a-z, A-Z, #, ., 0-9, _
@@ -30,7 +31,7 @@ autocomplete
         match*
             -> list_hidden; shouldHideList
             -> list.non_empty; matches
-            -> list.empty; doesNotMatch
+            -> list.empty; doesNotMatch > performThisAction
         list_hidden$
         list
             empty

@@ -20503,6 +20503,11 @@ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgb
         addToken("TRANSITION_ARROW");
 
         index += 2;
+      } else if (char === ">") {
+        index += 1;
+        // we expect a condition after the semicolon
+        const actionNames = conditionToken();
+        addToken("ACTIONS", actionNames);
       } else {
         addToken("UNKNOWN", char);
         index += 1;
@@ -20680,6 +20685,17 @@ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgb
       );
     }
 
+    function actions() {
+      if (tokens[index].type === "ACTIONS") {
+        return consume().text;
+      }
+
+      throw new ParserError(
+        tokens[index],
+        `Could not find ACTIONS identifier. Instead found ${tokens[index]}`
+      );
+    }
+
     function condition() {
       if (tokens[index].type === "CONDITION") {
         return consume().text;
@@ -20745,12 +20761,15 @@ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgb
       arrow();
       const stateName = identifier();
       let conditionName;
+      let actionNames;
 
       if (eventName) {
         conditionName = zeroOrOne(condition);
+        actionNames = zeroOrMore(actions);
       } else {
         // if the first event name was absent, the condition is mandatory
         conditionName = condition();
+        actionNames = zeroOrMore(actions);
       }
 
       return {
@@ -20761,8 +20780,12 @@ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgb
         // shorter form, like { x: 'y' }, it can be done later on in one fell
         // swoop
         [eventName]:
-          conditionName.length > 0
-            ? { target: stateName, cond: conditionName[0] }
+          conditionName.length > 0 || actionNames.length > 0
+            ? {
+                target: stateName,
+                cond: conditionName.length > 0 ? conditionName[0] : undefined,
+                actions: actionNames.length > 0 ? actionNames : undefined
+              }
             : stateName
       };
     }

@@ -163,6 +163,17 @@ export function parse(inputStr) {
     );
   }
 
+  function actions() {
+    if (tokens[index].type === "ACTIONS") {
+      return consume().text;
+    }
+
+    throw new ParserError(
+      tokens[index],
+      `Could not find ACTIONS identifier. Instead found ${tokens[index]}`
+    );
+  }
+
   function condition() {
     if (tokens[index].type === "CONDITION") {
       return consume().text;
@@ -228,12 +239,15 @@ export function parse(inputStr) {
     arrow();
     const stateName = identifier();
     let conditionName;
+    let actionNames;
 
     if (eventName) {
       conditionName = zeroOrOne(condition);
+      actionNames = zeroOrMore(actions);
     } else {
       // if the first event name was absent, the condition is mandatory
       conditionName = condition();
+      actionNames = zeroOrMore(actions);
     }
 
     return {
@@ -244,8 +258,12 @@ export function parse(inputStr) {
       // shorter form, like { x: 'y' }, it can be done later on in one fell
       // swoop
       [eventName]:
-        conditionName.length > 0
-          ? { target: stateName, cond: conditionName[0] }
+        conditionName.length > 0 || actionNames.length > 0
+          ? {
+              target: stateName,
+              cond: conditionName.length > 0 ? conditionName[0] : undefined,
+              actions: actionNames.length > 0 ? actionNames : undefined
+            }
           : stateName
     };
   }

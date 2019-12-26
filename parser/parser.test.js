@@ -10,7 +10,7 @@ const inputStr = `abc
     uvw -> #abc.lastState
     nestedstate1
     nestedstate2*
-  tried -> that
+  tried -> that > andDoThis
   lastState
     % trying out transient state
     -> ast; ifyes
@@ -22,7 +22,10 @@ const expectedXstateJSON = {
   on: {
     def: "lmn",
     pasta: "noodles",
-    tried: "that"
+    tried: {
+      target: "that",
+      actions: ["andDoThis"]
+    }
   },
   states: {
     ast: {
@@ -99,7 +102,8 @@ describe("tokenizer", () => {
   it("should give the correct number of tokens", () => {
     const tokens = tokenize(inputStr);
 
-    expect(tokens).toHaveLength(52);
+    console.log(tokens);
+    expect(tokens).toHaveLength(53);
   });
 
   it("gives correct indent and dedent tokens", () => {

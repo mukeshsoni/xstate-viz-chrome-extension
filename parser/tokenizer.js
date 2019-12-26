@@ -40,6 +40,10 @@ export function tokenize(str) {
     return comment;
   }
 
+  function isWhitespace(char) {
+    return /[\n\s\t]/.test(char);
+  }
+
   function conditionToken() {
     let char = next();
 
@@ -196,6 +200,11 @@ export function tokenize(str) {
       addToken("TRANSITION_ARROW");
 
       index += 2;
+    } else if (char === ">") {
+      index += 1;
+      // we expect a condition after the semicolon
+      const actionNames = conditionToken();
+      addToken("ACTIONS", actionNames);
     } else {
       addToken("UNKNOWN", char);
       index += 1;
