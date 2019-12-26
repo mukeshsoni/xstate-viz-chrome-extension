@@ -77,6 +77,7 @@ function clickXstateEditorUpdateButton() {
 function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
+  // jsEditor.setValue(prettier.format(jsEditor.getValue()));
   const jsInputStr = jsEditor.getValue();
 
   const machineConfigObj = parse(inputStr);
