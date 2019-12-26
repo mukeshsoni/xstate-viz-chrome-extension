@@ -1,3 +1,7 @@
+import ace from "brace";
+import "brace/theme/monokai";
+// custom ace mode for highlighting our language
+import "./ace_mode_sketch";
 import { parse } from "./parser/parser";
 import { Element, div, Button, Input } from "./components";
 
@@ -217,7 +221,7 @@ let extensionPane = div(
       display: "flex",
       "flex-direction": "column",
       // hide the pane by default on page load
-      visibility: "hidden"
+      visibility: "visible"
     }
   },
   paneChildren
@@ -229,6 +233,7 @@ document.body.appendChild(extensionPane);
 let editor = ace.edit(sketchSystemsEditorId);
 editor.setTheme("ace/theme/monokai");
 // editor.session.setMode("ace/mode/javascript");
+editor.session.setMode("ace/mode/sketch");
 editor.focus();
 
 function hideSuccessMessagePane() {

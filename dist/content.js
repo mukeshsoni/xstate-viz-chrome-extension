@@ -1,8 +1,81 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.SketchSystemsParser = {}));
-}(this, (function (exports) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('brace'), require('brace/theme/monokai')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'brace', 'brace/theme/monokai'], factory) :
+  (global = global || self, factory(global.SketchSystemsParser = {}, global.ace));
+}(this, (function (exports, ace) { 'use strict';
+
+  ace = ace && ace.hasOwnProperty('default') ? ace['default'] : ace;
+
+  // because we use brace, we have to use ace.define instead of the global define
+  // Also, the argument passed is named acequire instead of require. Don't know
+  // how the naming matters
+  // Some details here - https://gist.github.com/JackuB/3d589bd64dc96c1b18486baaaf58d910
+  ace.define(
+    "ace/mode/sketch",
+    [
+      "require",
+      "exports",
+      "ace/lib/oops",
+      "ace/mode/text",
+      "ace/mode/custom_highlight_rules"
+    ],
+    (acequire, exports) => {
+      const oop = acequire("ace/lib/oop");
+      const TextMode = acequire("ace/mode/text").Mode;
+      const CustomHighlightRules = acequire("ace/mode/custom_highlight_rules")
+        .CustomHighlightRules;
+
+      let Mode = function() {
+        this.HighlightRules = CustomHighlightRules;
+      };
+
+      oop.inherits(Mode, TextMode); // ACE's way of doing inheritance
+
+      exports.Mode = Mode; // eslint-disable-line no-param-reassign
+    }
+  );
+
+  // This is where we really create the highlighting rules
+  ace.define(
+    "ace/mode/custom_highlight_rules",
+    ["require", "exports", "ace/lib/oop", "ace/mode/text_highlight_rules"],
+    (acequire, exports) => {
+      const oop = acequire("ace/lib/oop");
+      const TextHighlightRules = acequire("ace/mode/text_highlight_rules")
+        .TextHighlightRules;
+
+      const CustomHighlightRules = function CustomHighlightRules() {
+        this.$rules = {
+          start: [
+            {
+              token: "empty_line",
+              regex: "^$"
+            },
+            {
+              token: "comment",
+              regex: /%.+/
+            },
+            {
+              token: "blahdiblah",
+              regex: /->/
+            },
+            // We can validate the headers with regex
+            {
+              token: ["keyword", "comment", "text"],
+              regex: /[a-zA-Z0-9_]+/
+            },
+            {
+              defaultToken: "text"
+            }
+          ]
+        };
+      };
+
+      oop.inherits(CustomHighlightRules, TextHighlightRules);
+
+      exports.CustomHighlightRules = CustomHighlightRules;
+    }
+  );
 
   function last(arr) {
     return arr[arr.length - 1];
@@ -827,7 +900,7 @@
         display: "flex",
         "flex-direction": "column",
         // hide the pane by default on page load
-        visibility: "hidden"
+        visibility: "visible"
       }
     },
     paneChildren
@@ -839,6 +912,7 @@
   let editor = ace.edit(sketchSystemsEditorId);
   editor.setTheme("ace/theme/monokai");
   // editor.session.setMode("ace/mode/javascript");
+  editor.session.setMode("ace/mode/sketch");
   editor.focus();
 
   function hideSuccessMessagePane() {
