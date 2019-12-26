@@ -59,6 +59,11 @@
               token: "keyword.operator",
               regex: /->/
             },
+            // TODO: Add a rule for transition and then an embedded rule which
+            // takes care of tokens inside the transition line. That way we can
+            // highlight a transition name differently from the state name.
+            // TODO: It will also help us highlight the condition name in a
+            // different way
             // We can validate the headers with regex
             {
               // ace has predefined css for ace_entity.ace_name.ace_function
@@ -673,10 +678,12 @@
       color: "white",
       "text-transform": "uppercase",
       "font-weight": "bold",
-      background: "rgb(101, 101, 101)",
+      background: "#656565",
       border: "none",
       cursor: "pointer",
       padding: "5px 10px",
+      "border-radius": "2px",
+      "letter-spacing": "1px",
       ...attributes.style
     };
 
@@ -782,7 +789,10 @@
   function TransformButton() {
     const sketchUpdateButton = Button(
       {
-        id: "sketch-update-button"
+        id: "sketch-update-button",
+        style: {
+          height: "2rem"
+        }
       },
       ["Transform"]
     );
@@ -796,7 +806,9 @@
     {
       style: {
         width: "100%",
-        padding: "10px"
+        padding: "10px",
+        "padding-bottom": "15px",
+        background: "#272722"
       }
     },
     [TransformButton()]

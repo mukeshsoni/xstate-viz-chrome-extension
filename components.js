@@ -44,10 +44,12 @@ export function Button(attributes, children) {
     color: "white",
     "text-transform": "uppercase",
     "font-weight": "bold",
-    background: "rgb(101, 101, 101)",
+    background: "#656565",
     border: "none",
     cursor: "pointer",
     padding: "5px 10px",
+    "border-radius": "2px",
+    "letter-spacing": "1px",
     ...attributes.style
   };
 

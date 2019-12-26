@@ -53,6 +53,11 @@ ace.define(
             token: "keyword.operator",
             regex: /->/
           },
+          // TODO: Add a rule for transition and then an embedded rule which
+          // takes care of tokens inside the transition line. That way we can
+          // highlight a transition name differently from the state name.
+          // TODO: It will also help us highlight the condition name in a
+          // different way
           // We can validate the headers with regex
           {
             // ace has predefined css for ace_entity.ace_name.ace_function

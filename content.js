@@ -100,7 +100,10 @@ function updateXstateEditor() {
 export function TransformButton() {
   const sketchUpdateButton = Button(
     {
-      id: "sketch-update-button"
+      id: "sketch-update-button",
+      style: {
+        height: "2rem"
+      }
     },
     ["Transform"]
   );
@@ -114,7 +117,9 @@ const transformButtonContainer = div(
   {
     style: {
       width: "100%",
-      padding: "10px"
+      padding: "10px",
+      "padding-bottom": "15px",
+      background: "#272722"
     }
   },
   [TransformButton()]
