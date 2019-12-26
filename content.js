@@ -177,7 +177,8 @@ const rangeInputLabelStyle = {
   border: "1px solid #888",
   padding: "3px 10px",
   "margin-left": "15px",
-  "font-size": "0.7rem"
+  "font-size": "0.7rem",
+  "font-weight": "bold"
 };
 
 function WidthInput() {
