@@ -29,15 +29,32 @@ export function HideButton() {
     {
       id: "sketch-hide-editor-button",
       style: {
-        width: "auto",
-        "border-radius": "10px",
-        padding: "5px 10px",
-        "margin-left": "20px",
-        border: "1px solid white"
+        background: "#272722",
+        "margin-left": "10px",
+        height: "100%"
       }
     },
     ["Hide"]
   );
+}
+
+function FormatButton() {
+  const b = Button(
+    {
+      style: {
+        background: "#272722",
+        "margin-left": "10px",
+        height: "100%"
+      }
+    },
+    ["Format JS"]
+  );
+
+  b.addEventListener("click", () => {
+    jsEditor.setValue(getFormattedJsCode(), 1);
+  });
+
+  return b;
 }
 
 function clearErrorPane() {
@@ -75,17 +92,28 @@ function clickXstateEditorUpdateButton() {
   }
 }
 
+function getFormattedJsCode() {
+  let formattedJsCode = jsEditor.getValue();
+  // have injected prettier standalone in the inject script. When the extension loads
+  if (prettier && prettierPlugins && jsEditor.getValue()) {
+    try {
+      formattedJsCode = prettier.format(jsEditor.getValue(), {
+        parser: "babylon",
+        plugins: prettierPlugins
+      });
+    } catch (e) {
+      console.log("Could not format js code", e);
+    }
+  }
+
+  return formattedJsCode;
+}
+
 function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
-  jsEditor.setValue(
-    // have injected prettier standalone in the inject script. When the extension loads
-    prettier.format(jsEditor.getValue(), {
-      parser: "babylon",
-      plugins: prettierPlugins
-    }),
-    1
-  );
+
+  jsEditor.setValue(getFormattedJsCode(), 1);
   const jsInputStr = jsEditor.getValue();
 
   const machineConfigObj = parse(inputStr.trim());
@@ -223,6 +251,7 @@ export function Toolbar() {
 
   return Element("header", { style: headerStyles }, [
     HideButton(),
+    FormatButton(),
     WidthInput(),
     EditorHeightAdjuster()
   ]);
