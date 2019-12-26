@@ -768,21 +768,25 @@
   function updateXstateEditor() {
     var editor = ace.edit("sketch-systems-editor");
     const inputStr = editor.getValue();
+    const jsInputStr = jsEditor.getValue();
 
-    const machineConfig = parse(inputStr);
+    const machineConfigObj = parse(inputStr);
 
-    if (machineConfig.error) {
-      console.error("Error parsing string", machineConfig.error);
-      showError(machineConfig.error);
+    if (machineConfigObj.error) {
+      console.error("Error parsing string", machineConfigObj.error);
+      showError(machineConfigObj.error);
     } else {
       clearErrorPane();
       showSuccessMessagePane();
       const xstateEditor = ace.edit("brace-editor");
-      const outputText = `const machine = Machine(${JSON.stringify(
-      machineConfig,
+      const outputText = `const machineConfig = ${JSON.stringify(
+      machineConfigObj,
       null,
       2
-    )})`;
+    )}
+
+${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
+    `;
       xstateEditor.setValue(
         `${commentEveryLine(inputStr)}\n\n ${outputText}`,
         -1
@@ -1015,6 +1019,7 @@
   let jsEditor = ace.edit(sketchSystemsJsEditorId);
   jsEditor.setTheme("ace/theme/monokai");
   jsEditor.session.setMode("ace/mode/javascript");
+  jsEditor.setValue("Machine(machineConfig)");
 
   function hideSuccessMessagePane() {
     const successMessagePane = document.getElementById(
@@ -1049,15 +1054,20 @@
   sketchHideEditorButton.addEventListener("click", toggleEditorVisibility);
 
   function hydrateEditorFromCache() {
-    const cachedStatechart = localStorage.getItem(
-      "sketch-systems-xstate-transformer"
-    );
+    try {
+      const cachedStatechart = JSON.parse(
+        localStorage.getItem("sketch-systems-xstate-transformer")
+      );
 
-    if (cachedStatechart) {
-      // the second param 1 ensures that the whole text is not selected, which
-      // is the default behavior of ace editor
-      // 1 puts the cursor to the end of pasted value
-      editor.setValue(cachedStatechart, 1);
+      if (cachedStatechart) {
+        // the second param 1 ensures that the whole text is not selected, which
+        // is the default behavior of ace editor
+        // 1 puts the cursor to the end of pasted value
+        editor.setValue(cachedStatechart.mainEditor || "", 1);
+        jsEditor.setValue(cachedStatechart.jsEditor || "", 1);
+      }
+    } catch (e) {
+      console.log("Nothing was saved to local storage it seems");
     }
   }
 
@@ -1066,7 +1076,10 @@
   function saveToLocalStorage() {
     localStorage.setItem(
       "sketch-systems-xstate-transformer",
-      editor.getValue() || ""
+      JSON.stringify({
+        mainEditor: editor.getValue() || "",
+        jsEditor: jsEditor.getValue() || ""
+      })
     );
   }
 
@@ -1074,6 +1087,8 @@
     saveToLocalStorage();
     hideSuccessMessagePane();
   });
+
+  jsEditor.on("change", saveToLocalStorage);
 
   function adjustEditorPosition() {
     extensionPane.style.right = `${getEditorRight()}px`;
