@@ -21304,6 +21304,7 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
 
   editor.session.setMode("ace/mode/sketch");
   editor.focus();
+
   let jsEditor = brace.edit(sketchSystemsJsEditorId);
   jsEditor.setTheme("ace/theme/monokai");
   jsEditor.session.setMode("ace/mode/javascript");
@@ -21334,6 +21335,19 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
     ]);
   }
 
+  function findByText(elName, text) {
+    const buttons = Array.from(document.querySelectorAll("button"));
+
+    return buttons.find(b => b.textContent === text);
+  }
+
+  function hideXstateEditor() {
+    const hideButton = findByText("button", "Hide");
+    if (hideButton) {
+      hideButton.click();
+    }
+  }
+
   function toggleEditorVisibility() {
     // if i use display: 'none' to hide the div, the ace editor
     // does not show up when i then change it back to display: 'block'
@@ -21342,6 +21356,8 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
       extensionPane.style.visibility = "hidden";
     } else {
       extensionPane.style.visibility = "visible";
+
+      hideXstateEditor();
     }
   }
 
@@ -21427,6 +21443,8 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
   });
 
   document.addEventListener("toggleSketchPane", toggleEditorVisibility);
+
+  setTimeout(hideXstateEditor, 200);
 
   exports.HideButton = HideButton;
   exports.Toolbar = Toolbar;
