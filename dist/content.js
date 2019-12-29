@@ -21294,7 +21294,7 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
 
   let editor = brace.edit(sketchSystemsEditorId);
   editor.setTheme("ace/theme/monokai");
-  // editor.session.setMode("ace/mode/javascript");
+  editor.setOption("useWorker", false);
   editor.session.setMode("ace/mode/sketch");
   editor.focus();
   let jsEditor = brace.edit(sketchSystemsJsEditorId);
@@ -21315,6 +21315,16 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
     const errorPane = document.getElementById("sketch-systems-error-pane");
 
     errorPane.innerHTML = `<div>${error.message}</div><div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
+
+    // show the error in ace editor's gutter
+    const a = editor.getSession().setAnnotations([
+      {
+        row: error.token.line - 1,
+        column: error.token.col - 1,
+        text: error.message,
+        type: "error"
+      }
+    ]);
   }
 
   function toggleEditorVisibility() {

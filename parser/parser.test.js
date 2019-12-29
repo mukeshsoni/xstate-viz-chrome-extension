@@ -195,3 +195,8 @@ describe("parser", () => {
     expect(ast.error).toBeDefined();
   });
 });
+
+// tests cases when the parser finds and error in the input
+// We want to give errors as accurate as possible
+// And even helpful, if possible
+describe("parser error handling", () => {});
