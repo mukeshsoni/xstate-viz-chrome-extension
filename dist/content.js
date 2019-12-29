@@ -21295,6 +21295,13 @@ ${jsInputStr ? jsInputStr : "Machine(machineConfig)"}
   let editor = brace.edit(sketchSystemsEditorId);
   editor.setTheme("ace/theme/monokai");
   editor.setOption("useWorker", false);
+  // cmd-enter or ctrl-enter (on windows) should run the transformation
+  editor.commands.addCommand({
+    name: "replace",
+    bindKey: { win: "Ctrl-Enter", mac: "Command-Enter" },
+    exec: updateXstateEditor
+  });
+
   editor.session.setMode("ace/mode/sketch");
   editor.focus();
   let jsEditor = brace.edit(sketchSystemsJsEditorId);
