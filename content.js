@@ -129,7 +129,10 @@ async function updateXstateEditor() {
 
   if (machineConfigObj.error) {
     console.error("Error parsing string", machineConfigObj.error);
-    showError(machineConfigObj.error);
+    showError({
+      message: machineConfigObj.error.message,
+      token: machineConfigObj.token
+    });
   } else {
     clearErrorPane();
     showSuccessMessagePane();

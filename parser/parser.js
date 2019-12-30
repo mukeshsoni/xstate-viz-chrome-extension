@@ -366,7 +366,10 @@ export function parse(inputStr) {
         ...parserOutput[id]
       };
     } catch (e) {
-      return { error: e };
+      console.log("error parsing", e.message, e.token);
+      // i have to pass the token explicitly when using the parser with web
+      // worker. Otherwise the token property on e get's lost. Don't know why
+      return { error: e, token: e.token };
     }
   }
 
