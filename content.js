@@ -1,9 +1,10 @@
 import ace from "brace";
+import * as Comlink from "comlink";
 
 import "brace/theme/monokai";
 // custom ace mode for highlighting our language
 import "./ace_mode_sketch";
-import { parse } from "./parser/parser";
+// import { parse } from "./parser/parser";
 import { Element, div, Button, Input } from "./components";
 
 const MIN_WIDTH = 200;
@@ -23,6 +24,14 @@ const jsEditorContainerId = "js-editor-container";
 let header = document.querySelector("header");
 const headerHeight = header.clientHeight;
 let drawingSection = document.querySelector("section");
+
+// to use the webworker with rollup, i had to use a plugin
+// rollup-plugin-web-worker-loader
+// It requires that we load the worker using the syntax below
+import myWorker from "web-worker:./worker";
+const worker = myWorker();
+// initialize the web worker and provide a simple api courtesy of comlink
+const parse = Comlink.wrap(worker);
 
 export function HideButton() {
   return Button(
@@ -109,14 +118,14 @@ function getFormattedJsCode() {
   return formattedJsCode;
 }
 
-function updateXstateEditor() {
+async function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
 
   jsEditor.setValue(getFormattedJsCode(), 1);
   const jsInputStr = jsEditor.getValue();
 
-  const machineConfigObj = parse(inputStr.trim());
+  const machineConfigObj = await parse(inputStr.trim());
 
   if (machineConfigObj.error) {
     console.error("Error parsing string", machineConfigObj.error);

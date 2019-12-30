@@ -1,6 +1,7 @@
 import resolve from "rollup-plugin-node-resolve";
 import commonJS from "rollup-plugin-commonjs";
 import builtins from "rollup-plugin-node-builtins";
+import webWorkerLoader from "rollup-plugin-web-worker-loader";
 
 const config = {
   input: "content.js",
@@ -14,7 +15,8 @@ const config = {
     commonJS({
       include: "node_modules/**"
     }),
-    builtins()
+    builtins(),
+    webWorkerLoader()
   ]
 };
 
