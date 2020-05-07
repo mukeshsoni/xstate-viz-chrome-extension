@@ -10,6 +10,13 @@ E.g. statechart representation in the textual langauge
 
 ```
 % statechart for autocomplete. This is a comment.
+% a single word in a line signifies a state
+% indented lines inside state signify the transitions inside the state
+% one line for each transition
+% A transition has the following format - eventName -> stateName
+% There can also be a transition without an event. They are called transient
+% transitions. They can be specified without specifying the event name in the
+% normal transition syntax. E.g. `-> stateName` 
 % You can specify the type of state by adding some special character
 % at the end of the state name
 % * -> initial state
@@ -17,7 +24,10 @@ E.g. statechart representation in the textual langauge
 % & -> parallel state
 % A condition for a transition can be specified by using the semicolon 
 % actions to be run on a transition can be specified by using a >. E.g. EVENT -> state > action1 > action2
-% separator. Look at the `match` state for example.
+% separator. Look at the third transition in `match` state for example.
+% what about a syntax where the conditions/actions can be specified by another
+% indented line after the transtion and some specifiers like c: and a: for
+% conditions and actions?
 % state names and transition names cannot have spaces in them
 % Only accepted characters are a-z, A-Z, #, ., 0-9, _
 autocomplete

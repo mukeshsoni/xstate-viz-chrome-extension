@@ -104,6 +104,7 @@ describe("tokenizer", () => {
 
     console.log(tokens);
     expect(tokens).toHaveLength(53);
+    expect(tokens).toMatchSnapshot();
   });
 
   it("gives correct indent and dedent tokens", () => {
@@ -168,6 +169,7 @@ describe("parser", () => {
 
     // console.log(JSON.stringify(ast, null, 2));
     expect(ast).toEqual(expectedXstateJSONFetch);
+    expect(ast).toMatchSnapshot();
   });
 
   it("should throw error when transition state not specified", () => {

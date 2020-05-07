@@ -1,0 +1,365 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parser should generate xstate representation for the fetch statechart 1`] = `
+Object {
+  "id": "fetch",
+  "initial": "idle",
+  "isInitial": undefined,
+  "on": undefined,
+  "states": Object {
+    "failure": Object {
+      "isInitial": undefined,
+      "on": Object {
+        "RETRY": "loading",
+      },
+      "states": undefined,
+      "type": undefined,
+    },
+    "idle": Object {
+      "isInitial": undefined,
+      "on": Object {
+        "FETCH": "loading",
+      },
+      "states": undefined,
+      "type": undefined,
+    },
+    "loading": Object {
+      "isInitial": undefined,
+      "on": Object {
+        "REJECT": "failure",
+        "RESOLVE": "success",
+      },
+      "states": undefined,
+      "type": undefined,
+    },
+    "success": Object {
+      "isInitial": undefined,
+      "on": undefined,
+      "states": undefined,
+      "type": "final",
+    },
+  },
+  "type": undefined,
+}
+`;
+
+exports[`tokenizer should give the correct number of tokens 1`] = `
+Array [
+  Object {
+    "col": 1,
+    "line": 1,
+    "text": "abc",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 4,
+    "line": 1,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 1,
+    "line": 2,
+    "text": "% some comment",
+    "type": "COMMENT",
+  },
+  Object {
+    "col": 15,
+    "line": 2,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 1,
+    "line": 3,
+    "text": "  ",
+    "type": "INDENT",
+  },
+  Object {
+    "col": 3,
+    "line": 3,
+    "text": "def",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 6,
+    "line": 3,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 7,
+    "line": 3,
+    "text": "lmn",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 10,
+    "line": 3,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 3,
+    "line": 4,
+    "text": "pasta",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 8,
+    "line": 4,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 9,
+    "line": 4,
+    "text": "noodles",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 16,
+    "line": 4,
+    "text": "%more comment",
+    "type": "COMMENT",
+  },
+  Object {
+    "col": 29,
+    "line": 4,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 3,
+    "line": 5,
+    "text": "ast",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 6,
+    "line": 5,
+    "text": undefined,
+    "type": "PARALLEL_STATE",
+  },
+  Object {
+    "col": 7,
+    "line": 5,
+    "text": undefined,
+    "type": "INITIAL_STATE",
+  },
+  Object {
+    "col": 8,
+    "line": 5,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 1,
+    "line": 6,
+    "text": "    ",
+    "type": "INDENT",
+  },
+  Object {
+    "col": 5,
+    "line": 6,
+    "text": "opq",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 8,
+    "line": 6,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 9,
+    "line": 6,
+    "text": "rst",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 12,
+    "line": 6,
+    "text": "ifyes",
+    "type": "CONDITION",
+  },
+  Object {
+    "col": 17,
+    "line": 6,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 5,
+    "line": 7,
+    "text": "uvw",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 8,
+    "line": 7,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 9,
+    "line": 7,
+    "text": "#abc.lastState",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 23,
+    "line": 7,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 5,
+    "line": 8,
+    "text": "nestedstate1",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 17,
+    "line": 8,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 5,
+    "line": 9,
+    "text": "nestedstate2",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 17,
+    "line": 9,
+    "text": undefined,
+    "type": "INITIAL_STATE",
+  },
+  Object {
+    "col": 18,
+    "line": 9,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 1,
+    "line": 10,
+    "text": "  ",
+    "type": "DEDENT",
+  },
+  Object {
+    "col": 3,
+    "line": 10,
+    "text": "tried",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 8,
+    "line": 10,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 9,
+    "line": 10,
+    "text": "that",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 13,
+    "line": 10,
+    "text": "andDoThis",
+    "type": "ACTIONS",
+  },
+  Object {
+    "col": 22,
+    "line": 10,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 3,
+    "line": 11,
+    "text": "lastState",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 12,
+    "line": 11,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 1,
+    "line": 12,
+    "text": "    ",
+    "type": "INDENT",
+  },
+  Object {
+    "col": 5,
+    "line": 12,
+    "text": "% trying out transient state",
+    "type": "COMMENT",
+  },
+  Object {
+    "col": 33,
+    "line": 12,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 5,
+    "line": 13,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 6,
+    "line": 13,
+    "text": "ast",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 9,
+    "line": 13,
+    "text": "ifyes",
+    "type": "CONDITION",
+  },
+  Object {
+    "col": 14,
+    "line": 13,
+    "text": undefined,
+    "type": "NEWLINE",
+  },
+  Object {
+    "col": 5,
+    "line": 14,
+    "text": undefined,
+    "type": "TRANSITION_ARROW",
+  },
+  Object {
+    "col": 6,
+    "line": 14,
+    "text": "lastState",
+    "type": "IDENTIFIER",
+  },
+  Object {
+    "col": 15,
+    "line": 14,
+    "text": "ifno",
+    "type": "CONDITION",
+  },
+  Object {
+    "col": 19,
+    "line": 14,
+    "type": "DEDENT",
+  },
+  Object {
+    "col": 19,
+    "line": 14,
+    "type": "DEDENT",
+  },
+]
+`;

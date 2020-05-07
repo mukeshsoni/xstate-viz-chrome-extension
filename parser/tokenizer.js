@@ -59,6 +59,8 @@ export function tokenize(str) {
   // It takes care of creating the right INDENT and DETENT tokens
   // the algorithm is taken from here - https://docs.python.org/3/reference/lexical_analysis.html
   // the implementation is mostly copied from the chevrotain example here - https://github.com/SAP/chevrotain/blob/master/examples/lexer/python_indentation/python_indentation.js
+  // TODO: don't add INDENT/DETENT tokens for lines which only have
+  // whitespace
   function whitespaceTokenizer() {
     // the y ensures that this regex only matches the beginning of the string
     const regex = / +/y;
