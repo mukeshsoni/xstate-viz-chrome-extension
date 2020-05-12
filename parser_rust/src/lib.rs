@@ -1,5 +1,8 @@
 mod parser;
 
+#[macro_use]
+extern crate serde_derive;
+
 use parser::*;
 
 use wasm_bindgen::prelude::*;
@@ -16,13 +19,13 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn greet(greeting: &str) {
-    alert(
-        format!(
-            "Hello, rust-wasm! How are you today? {:?} {}",
-            greeting,
-            master_greeter()
-        )
-        .as_str(),
-    );
+pub fn parse(input: &str) -> JsValue {
+    let mut parser = Parser::new();
+
+    let ast = parser.parse(input);
+
+    match ast {
+        Ok(ast) => JsValue::from_serde(&ast).unwrap(),
+        Err(error_str) => JsValue::from_serde(error_str).unwrap(),
+    }
 }

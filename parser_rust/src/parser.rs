@@ -3,7 +3,7 @@ use std::collections::HashMap;
 mod tokenizer;
 use tokenizer::*;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 enum StateType {
     AtomicState,
     CompoundState,
@@ -11,7 +11,7 @@ enum StateType {
     ParallelState,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 pub struct TransitionNode<'a> {
     event: &'a str,
     target: &'a str,
@@ -19,7 +19,7 @@ pub struct TransitionNode<'a> {
     actions: Option<Vec<&'a str>>,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 pub struct StateNode<'a> {
     id: &'a str,
     typ: StateType,
@@ -471,10 +471,6 @@ impl<'a> Parser<'a> {
 
         Err("MyParser: Error parsing string")
     }
-}
-
-pub fn master_greeter() -> usize {
-    return 2;
 }
 
 #[cfg(test)]
