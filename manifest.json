@@ -21,7 +21,7 @@
       "js": ["inject.js"]
     }
   ],
-  "web_accessible_resources": ["dist/content.js"],
+  "web_accessible_resources": ["dist/*"],
   "manifest_version": 2,
   "icons": {
     "16": "images/get_started16.png",
