@@ -15,7 +15,11 @@ enum StateType {
 pub struct TransitionNode<'a> {
     event: &'a str,
     target: &'a str,
+    // Use a method to decide whether the field should be skipped.
+    #[serde(skip_serializing_if = "Option::is_none")]
     cond: Option<&'a str>,
+    // Use a method to decide whether the field should be skipped.
+    #[serde(skip_serializing_if = "Option::is_none")]
     actions: Option<Vec<&'a str>>,
 }
 
@@ -23,6 +27,8 @@ pub struct TransitionNode<'a> {
 pub struct StateNode<'a> {
     id: &'a str,
     typ: StateType,
+    // Use a method to decide whether the field should be skipped.
+    #[serde(skip_serializing_if = "Option::is_none")]
     initial: Option<&'a str>,
     is_initial: bool,
     // xstate has a representation of events as

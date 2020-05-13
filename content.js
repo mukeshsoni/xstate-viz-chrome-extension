@@ -130,6 +130,74 @@ function getFormattedJsCode() {
   return formattedJsCode;
 }
 
+// we generate an array of events from our parser. It looks like this
+// on: [
+//    {
+//      event: string;
+//      target: string;
+//      cond?: string;
+//      actions?: Array<string>;
+//    }
+// ]
+//
+// We want to convert it to an object of key value pairs. The most common usage
+// is { on: { eventName: targetName }}
+// But we will use a little more generic represenatation so that it accomodates
+// more cases, like event with condition and actions
+// on: {
+//    [eventName: string]: {
+//      target: string;
+//      cond?: string;
+//      actions?: Array<string>;
+//    }
+// }
+// There is one special case - transient transition. It has an empty string as
+// the event name. We create an array of objects against the empty string as
+// event name
+// on: {
+//    "": [
+//      {
+//        target: string;
+//        cond: string;
+//        actions?: Array<string>;
+//      },
+//      {
+//        target: string;
+//        cond: string;
+//        actions?: Array<string>;
+//      }
+//    ]
+// }
+function eventArrayToObj(eventsArr) {
+  return eventsArr.reduce((acc, item) => {
+    // in case of transient states, we will have { '': { target: 'abc', cond: xyz } } kind of transitions. And they need to be merged for all '' appearances
+    // They need to be merged into an array
+    if (!item.event) {
+      return {
+        ...acc,
+        "": acc[""] ? acc[""].concat(item) : [item],
+      };
+    } else {
+      return { ...acc, [item.event]: item };
+    }
+  }, {});
+}
+
+function transformEventsArrayToObjStructure(stateNode) {
+  return {
+    ...stateNode,
+    on: eventArrayToObj(stateNode.on),
+    states: stateNode.states
+      ? Object.fromEntries(
+          Object.entries(stateNode.states).map(([stateName, node]) => [
+            stateName,
+            transformEventsArrayToObjStructure(node),
+          ])
+        )
+      : undefined,
+  };
+}
+
 async function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
@@ -137,7 +205,9 @@ async function updateXstateEditor() {
   jsEditor.setValue(getFormattedJsCode(), 1);
   const jsInputStr = jsEditor.getValue();
 
-  const machineConfigObj = await parse(inputStr.trim());
+  let machineConfigObj = await parse(inputStr.trim());
+
+  machineConfigObj = transformEventsArrayToObjStructure(machineConfigObj);
 
   console.log({ machineConfigObj });
   if (machineConfigObj.error) {
@@ -535,4 +605,4 @@ widthInputElement.addEventListener("change", () => {
 
 document.addEventListener("toggleSketchPane", toggleEditorVisibility);
 
-setTimeout(hideXstateEditor, 200);
+// setTimeout(hideXstateEditor, 200);
