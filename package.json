@@ -6,8 +6,9 @@
   "scripts": {
     "build:wasm": "wasm-pack build parser_rust --target web",
     "copy-wasm-file-to-dist": "cp ./parser_rust/pkg/parser_rust_bg.wasm dist/content_bg.wasm",
+    "build:wasm-and-copy-wasm-file": "npm run build:wasm && npm run copy-wasm-file-to-dist",
     "build:js": "rollup --config rollup.config.js",
-    "build:all": "npm run build:js && npm run build:wasm && npm run copy-wasm-file-to-dist",
+    "build:all": "npm run build:js && npm run build:wasm-and-copy-wasm-file",
     "start": "node server.js",
     "test": "jest"
   },
