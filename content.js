@@ -207,14 +207,14 @@ function transformEventsArrayToObjStructure(stateNode) {
   };
 }
 
-async function updateXstateEditor() {
+function updateXstateEditor() {
   var editor = ace.edit("sketch-systems-editor");
   const inputStr = editor.getValue();
 
   jsEditor.setValue(getFormattedJsCode(), 1);
   const jsInputStr = jsEditor.getValue();
 
-  let machineConfigObj = await parse(inputStr.trim());
+  let machineConfigObj = parse(inputStr.trim());
 
   machineConfigObj = transformEventsArrayToObjStructure(machineConfigObj);
 
