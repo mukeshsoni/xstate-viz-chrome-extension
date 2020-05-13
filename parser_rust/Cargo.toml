@@ -1,5 +1,5 @@
 [package]
-name = "rust-wasm"
+name = "parser_rust"
 version = "0.1.0"
 authors = ["Mukesh Soni <mukeshsoni@gmail.com>"]
 edition = "2018"
