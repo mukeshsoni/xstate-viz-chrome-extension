@@ -43,6 +43,9 @@ pub struct TransitionNode<'a> {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 pub struct StateNode<'a> {
     id: &'a str,
+    // rust tip: We can't use the property name "type" because it's a rust
+    // keyword. But we can rename the property when serializing with serde
+    // using the below annotation
     #[serde(rename(serialize = "type"))]
     typ: StateType,
     // Use a method to decide whether the field should be skipped.
