@@ -155,6 +155,11 @@ function getFormattedJsCode() {
 // the event name. We create an array of objects against the empty string as
 // event name
 // on: {
+//    [namedEvent: string]: {
+//      target: string;
+//      cond?: string;
+//      actions?: Array<string>;
+//    },
 //    "": [
 //      {
 //        target: string;
@@ -168,6 +173,10 @@ function getFormattedJsCode() {
 //      }
 //    ]
 // }
+// A transient state can have a combination of unnamed and named events. That's
+// because it's possible that the user ends up in that state if none of the
+// conditions of the unnamed states return true. In that case user can use the
+// named state to get of this state and go somewhere else.
 function eventArrayToObj(eventsArr) {
   return eventsArr.reduce((acc, item) => {
     // in case of transient states, we will have { '': { target: 'abc', cond: xyz } } kind of transitions. And they need to be merged for all '' appearances
