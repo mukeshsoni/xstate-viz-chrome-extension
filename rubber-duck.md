@@ -11,3 +11,7 @@
     Solution - Use `#[serde(rename(serialize = "type"))]` annotation above the
     `typ` property declaration in the StateNode struct.
 5. [ ] Take care of error messages
+6. Use production builds for both content.js and rust wasm code before
+   publishing to chrome store
+7. [ ] Publish to chrome store
+8. 
