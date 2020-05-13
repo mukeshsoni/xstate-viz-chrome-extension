@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rollup --config",
+    "build:wasm": "wasm-pack build parser_rust --target web",
+    "copy-wasm-file-to-dist": "cp ./parser_rust/pkg/parser_rust_bg.wasm dist/content_bg.wasm",
+    "build:js": "rollup --config rollup.config.js",
+    "build:all": "npm run build:js && npm run build:wasm && npm run copy-wasm-file-to-dist",
+    "start": "node server.js",
     "test": "jest"
   },
   "keywords": [],
@@ -18,7 +22,8 @@
     "rollup": "^1.27.9",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-builtins": "^2.1.2",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "wasm-pack": "^0.9.1"
   },
   "dependencies": {
     "brace": "^0.11.1",

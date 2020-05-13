@@ -57,8 +57,17 @@ To setup a development environement -
 
 ```
 npm install
-npm run build -- --watch
+npm run build:all
 ```
+
+To change `content.js` and build in watch mode
+
+```
+npm run build:js -- --watch
+```
+
+TODO: Add instructions on how to run both `wasm-pack` and `rollup` in watch
+modes.
 
 Now changes made to `content.js` will be compiled to `dist/content.js` which is then used inside the chrome extension (check `manifest.json`).
 
