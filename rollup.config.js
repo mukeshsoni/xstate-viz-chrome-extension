@@ -8,16 +8,16 @@ const config = {
   output: {
     file: "dist/content.js",
     format: "umd",
-    name: "SketchSystemsParser"
+    name: "SketchSystemsParser",
   },
   plugins: [
     resolve(),
     commonJS({
-      include: "node_modules/**"
+      include: "node_modules/**",
     }),
     builtins(),
-    webWorkerLoader()
-  ]
+    webWorkerLoader(),
+  ],
 };
 
 export default config;

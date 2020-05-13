@@ -1,10 +1,8 @@
+import init, { parse } from "./parser_rust/pkg/parser_rust.js";
 import ace from "brace";
-import * as Comlink from "comlink";
-
 import "brace/theme/monokai";
 // custom ace mode for highlighting our language
 import "./ace_mode_sketch";
-// import { parse } from "./parser/parser";
 import { Element, div, Button, Input } from "./components";
 
 const MIN_WIDTH = 200;
@@ -28,10 +26,24 @@ let drawingSection = document.querySelector("section");
 // to use the webworker with rollup, i had to use a plugin
 // rollup-plugin-web-worker-loader
 // It requires that we load the worker using the syntax below
-import myWorker from "web-worker:./worker";
-const worker = myWorker();
+// import myWorker from "comlink-loader!./worker";
+// const worker = myWorker();
 // initialize the web worker and provide a simple api courtesy of comlink
-const parse = Comlink.wrap(worker);
+// const parse = Comlink.wrap(worker);
+
+// IMPORTANT - This is the key step to loading the wasm bundle generated
+// by wasm-pack. The init function exported by wasm-pack (using --target build)
+// helps us load the wasm modules easily. And it also somehow makes sure that
+// the imported `parse` function from that module works.
+// await init() ensures that we load the wasm module asynchronously, which is
+// a hard requirement right now in all browsers.
+async function run() {
+  await init();
+
+  console.log("run", parse("abc"));
+}
+
+run();
 
 export function HideButton() {
   return Button(
@@ -40,8 +52,8 @@ export function HideButton() {
       style: {
         background: "#272722",
         "margin-left": "10px",
-        height: "100%"
-      }
+        height: "100%",
+      },
     },
     ["Hide"]
   );
@@ -53,8 +65,8 @@ function FormatButton() {
       style: {
         background: "#272722",
         "margin-left": "10px",
-        height: "100%"
-      }
+        height: "100%",
+      },
     },
     ["Format JS"]
   );
@@ -83,7 +95,7 @@ function commentEveryLine(str) {
     "// sketch-systems like statechart description\n\n" +
     str
       .split(/[\n\r]/)
-      .map(s => `// ${s}`)
+      .map((s) => `// ${s}`)
       .join("\n")
   );
   // return str;
@@ -93,7 +105,7 @@ function clickXstateEditorUpdateButton() {
   const buttons = document.querySelectorAll("button");
 
   const updateButton = Array.from(buttons).find(
-    b => b.textContent.toLowerCase() === "update"
+    (b) => b.textContent.toLowerCase() === "update"
   );
 
   if (updateButton && updateButton.click) {
@@ -108,7 +120,7 @@ function getFormattedJsCode() {
     try {
       formattedJsCode = prettier.format(jsEditor.getValue(), {
         parser: "babylon",
-        plugins: prettierPlugins
+        plugins: prettierPlugins,
       });
     } catch (e) {
       console.log("Could not format js code", e);
@@ -127,11 +139,12 @@ async function updateXstateEditor() {
 
   const machineConfigObj = await parse(inputStr.trim());
 
+  console.log({ machineConfigObj });
   if (machineConfigObj.error) {
     console.error("Error parsing string", machineConfigObj.error);
     showError({
       message: machineConfigObj.error.message,
-      token: machineConfigObj.token
+      token: machineConfigObj.token,
     });
   } else {
     clearErrorPane();
@@ -159,8 +172,8 @@ export function TransformButton() {
     {
       id: "sketch-update-button",
       style: {
-        height: "2rem"
-      }
+        height: "2rem",
+      },
     },
     ["Transform"]
   );
@@ -176,8 +189,8 @@ const TransformButtonContainer = div(
       width: "100%",
       padding: "10px",
       "padding-bottom": "15px",
-      background: "#272722"
-    }
+      background: "#272722",
+    },
   },
   [TransformButton()]
 );
@@ -190,14 +203,14 @@ const rangeInputLabelStyle = {
   padding: "3px 10px",
   "margin-left": "15px",
   "font-size": "0.7rem",
-  "font-weight": "bold"
+  "font-weight": "bold",
 };
 
 function WidthInput() {
   return Element(
     "label",
     {
-      style: rangeInputLabelStyle
+      style: rangeInputLabelStyle,
     },
     [
       "Width",
@@ -208,9 +221,9 @@ function WidthInput() {
         max: MAX_WIDTH,
         value: EDITOR_WIDTH,
         style: {
-          width: "70px"
-        }
-      })
+          width: "70px",
+        },
+      }),
     ]
   );
 }
@@ -222,7 +235,7 @@ function EditorHeightAdjuster() {
   const inputEl = Element(
     "label",
     {
-      style: rangeInputLabelStyle
+      style: rangeInputLabelStyle,
     },
     [
       "Height ratio",
@@ -233,13 +246,13 @@ function EditorHeightAdjuster() {
         max: MAX_RATIO,
         value: EDITOR_HEIGHT_RATIO,
         style: {
-          width: "70px"
-        }
-      })
+          width: "70px",
+        },
+      }),
     ]
   );
 
-  inputEl.addEventListener("change", e => {
+  inputEl.addEventListener("change", (e) => {
     const mainEditor = document.getElementById(mainEditorContainerId);
     const jsEditor = document.getElementById(jsEditorContainerId);
 
@@ -259,14 +272,14 @@ export function Toolbar() {
     color: "white",
     display: "flex",
     "flex-direction": "row-reverse",
-    "align-items": "center"
+    "align-items": "center",
   };
 
   return Element("header", { style: headerStyles }, [
     HideButton(),
     FormatButton(),
     WidthInput(),
-    EditorHeightAdjuster()
+    EditorHeightAdjuster(),
   ]);
 }
 
@@ -278,8 +291,8 @@ function EditorHeader(heading) {
         background: "#272722",
         color: "#fff",
         padding: "5px 10px",
-        "border-bottom": "1px solid #333333"
-      }
+        "border-bottom": "1px solid #333333",
+      },
     },
     [heading]
   );
@@ -289,7 +302,7 @@ function EditorContainer(id, heading, editorEl) {
   return div(
     {
       id,
-      style: { display: "flex", "flex-direction": "column", flex: 1 }
+      style: { display: "flex", "flex-direction": "column", flex: 1 },
     },
     [EditorHeader(heading), editorEl]
   );
@@ -298,15 +311,15 @@ function EditorContainer(id, heading, editorEl) {
 const editorDiv = div({
   id: sketchSystemsEditorId,
   style: {
-    flex: 1
-  }
+    flex: 1,
+  },
 });
 
 const jsEditorDiv = div({
   id: sketchSystemsJsEditorId,
   style: {
-    flex: 1
-  }
+    flex: 1,
+  },
 });
 
 const successDiv = div(
@@ -315,8 +328,8 @@ const successDiv = div(
     style: {
       color: "green",
       display: "none",
-      "overflow-wrap": "break-word"
-    }
+      "overflow-wrap": "break-word",
+    },
   },
   ["Transformed successfully!"]
 );
@@ -324,8 +337,8 @@ const successDiv = div(
 const errorDiv = div({
   id: errorDivId,
   style: {
-    color: "red"
-  }
+    color: "red",
+  },
 });
 
 function getEditorRight() {
@@ -346,7 +359,7 @@ const paneChildren = [
   EditorContainer(jsEditorContainerId, "JS Editor", jsEditorDiv),
   successDiv,
   errorDiv,
-  TransformButtonContainer
+  TransformButtonContainer,
 ];
 
 let extensionPane = div(
@@ -361,8 +374,8 @@ let extensionPane = div(
       display: "flex",
       "flex-direction": "column",
       // hide the pane by default on page load
-      visibility: "visible"
-    }
+      visibility: "visible",
+    },
   },
   paneChildren
 );
@@ -377,7 +390,7 @@ editor.setOption("useWorker", false);
 editor.commands.addCommand({
   name: "replace",
   bindKey: { win: "Ctrl-Enter", mac: "Command-Enter" },
-  exec: updateXstateEditor
+  exec: updateXstateEditor,
 });
 
 editor.session.setMode("ace/mode/sketch");
@@ -408,15 +421,15 @@ function showError(error) {
       row: error.token.line - 1,
       column: error.token.col - 1,
       text: error.message,
-      type: "error"
-    }
+      type: "error",
+    },
   ]);
 }
 
 function findByText(elName, text) {
   const buttons = Array.from(document.querySelectorAll("button"));
 
-  return buttons.find(b => b.textContent === text);
+  return buttons.find((b) => b.textContent === text);
 }
 
 function hideXstateEditor() {
@@ -470,7 +483,7 @@ function saveToLocalStorage() {
     "sketch-systems-xstate-transformer",
     JSON.stringify({
       mainEditor: editor.getValue() || "",
-      jsEditor: jsEditor.getValue() || ""
+      jsEditor: jsEditor.getValue() || "",
     })
   );
 }
@@ -489,8 +502,8 @@ function adjustEditorPosition() {
 // in the xstate-editor the show/hide of the editor pane is done by
 // changing the data-layout attribute of the main tag
 // we want to reposition our editor based on change to that attribute
-var observer = new MutationObserver(function(mutations) {
-  mutations.forEach(function(mutation) {
+var observer = new MutationObserver(function (mutations) {
+  mutations.forEach(function (mutation) {
     if (
       mutation.type == "attributes" &&
       mutation.attributeName === "data-layout"
@@ -502,7 +515,7 @@ var observer = new MutationObserver(function(mutations) {
 
 const mainElement = document.querySelector("main");
 observer.observe(mainElement, {
-  attributes: true //configure it to listen to attribute changes
+  attributes: true, //configure it to listen to attribute changes
 });
 
 const widthInputElement = document.getElementById("sketch-systems-width-input");

@@ -14,3 +14,12 @@ if you have installed `cargo-watch`
 ```
 cargo watch -x test
 ```
+
+### Generate wasm files
+
+```
+wasm-pack build --target web
+```
+
+we don't use `wasm-pack build --target bundler` because that doesn't work for
+our usecase of loading the wasm files in chrome extension.
