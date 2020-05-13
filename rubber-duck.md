@@ -2,8 +2,12 @@
    desription of the language.
 2. [ ] Try loading the parser in the web worker again, now that we have wasm
    working in our extension.
-3. [ ] Convert the state type names to names accepted by xstate. ParallelState
-   to 'parallel' and so on. Also the property name has to be `type` and not
+3. [x] Convert the state type names to names accepted by xstate. ParallelState
+   to 'parallel' and so on. 
+    Solution - Implement Serialize trait from serde for the StateType enum
+4. [x] Also the property name has to be `type` and not
    `typ`. We have it as `typ` right now because `type` is a keyword in rust and
    cannot be used as a property name.
-4. [ ] Take care of error messages
+    Solution - Use `#[serde(rename(serialize = "type"))]` annotation above the
+    `typ` property declaration in the StateNode struct.
+5. [ ] Take care of error messages
