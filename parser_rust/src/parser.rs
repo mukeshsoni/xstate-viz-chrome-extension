@@ -43,6 +43,7 @@ pub struct TransitionNode<'a> {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 pub struct StateNode<'a> {
     id: &'a str,
+    #[serde(rename(serialize = "type"))]
     typ: StateType,
     // Use a method to decide whether the field should be skipped.
     #[serde(skip_serializing_if = "Option::is_none")]
