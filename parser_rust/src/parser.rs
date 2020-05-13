@@ -1,14 +1,31 @@
+use serde::ser::{Serialize, Serializer};
 use std::collections::HashMap;
 
 mod tokenizer;
 use tokenizer::*;
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 enum StateType {
     AtomicState,
     CompoundState,
     FinalState,
     ParallelState,
+}
+
+// we want to convert the StateType to strings which xstate understands
+// we do so by implementing the Serialize trait from serde
+impl Serialize for StateType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(match *self {
+            StateType::AtomicState => "atomic",
+            StateType::CompoundState => "compound",
+            StateType::FinalState => "final",
+            StateType::ParallelState => "parallel",
+        })
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
