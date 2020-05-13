@@ -6,3 +6,4 @@
    to 'parallel' and so on. Also the property name has to be `type` and not
    `typ`. We have it as `typ` right now because `type` is a keyword in rust and
    cannot be used as a property name.
+4. [ ] Take care of error messages
