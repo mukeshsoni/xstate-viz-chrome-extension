@@ -492,7 +492,11 @@ function showError(error) {
   hideSuccessMessagePane();
   const errorPane = document.getElementById("sketch-systems-error-pane");
 
-  errorPane.innerHTML = `<div>${error.message}</div><div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
+  errorPane.innerHTML = `<div>${error.message}</div>`;
+
+  if (error.token.line) {
+    errorPane.innerHTML += `<div>Line no: ${error.token.line}, Column no: ${error.token.col}</div>`;
+  }
 
   // show the error in ace editor's gutter
   const a = editor.getSession().setAnnotations([
@@ -613,5 +617,13 @@ widthInputElement.addEventListener("change", () => {
 });
 
 document.addEventListener("toggleSketchPane", toggleEditorVisibility);
+
+// catch errors logged by xstate and show them in our error pane
+// specially useful if the xstate pane is hidden
+window.onerror = function (error, url, line) {
+  if (url.includes("xstate")) {
+    showError({ message: `xstate error - ${error}`, token: {} });
+  }
+};
 
 // setTimeout(hideXstateEditor, 200);

@@ -164,8 +164,6 @@ where
     None
 }
 
-// TODO: these parser combinators are not using self at all. We can move
-// them out of the impl methods
 fn zero_or_more<T, F>(offset: usize, mut f: F) -> Option<(usize, Vec<T>)>
 where
     F: FnMut(usize) -> Option<(usize, T)>,

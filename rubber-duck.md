@@ -14,4 +14,6 @@
 6. Use production builds for both content.js and rust wasm code before
    publishing to chrome store
 7. [ ] Publish to chrome store
-8. 
+8. [ ] NEXT Catch errors thrown by xstate and show them. Specially useful if the
+   xstate pane is hidden.
+   Might be able to catch them by monkey patching `console.error`
