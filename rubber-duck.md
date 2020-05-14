@@ -17,3 +17,7 @@
 8. [ ] NEXT Catch errors thrown by xstate and show them. Specially useful if the
    xstate pane is hidden.
    Might be able to catch them by monkey patching `console.error`
+9. Try to feed ace the grammar for our language and see if we can show the
+   warnings/errors on the side pane of the editor.
+10. Ace is not recognizing spread operator in our javascript pane and shows them
+    as errors.

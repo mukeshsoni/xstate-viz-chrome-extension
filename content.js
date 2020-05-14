@@ -121,6 +121,9 @@ function getFormattedJsCode() {
       formattedJsCode = prettier.format(jsEditor.getValue(), {
         parser: "babylon",
         plugins: prettierPlugins,
+        // if the width is 400px, 50 letters is all we want to show
+        // Don't show any more than 80 chars in a line in any case
+        printWidth: Math.min(Math.round(EDITOR_WIDTH / 8), 80),
       });
     } catch (e) {
       console.log("Could not format js code", e);
