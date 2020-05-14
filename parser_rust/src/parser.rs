@@ -36,8 +36,8 @@ pub struct TransitionNode<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     cond: Option<&'a str>,
     // Use a method to decide whether the field should be skipped.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    actions: Option<Vec<&'a str>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    actions: Vec<&'a str>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
@@ -153,21 +153,20 @@ pub struct Parser<'a> {
 // this parser is supposed to treat as a success.
 // TODO: Why can't it return Option<(offset, T)> like all other parsers do?
 // Then we would also have a unified api for all parser functions.
-fn zero_or_one<T, F>(offset: usize, f: F) -> (usize, Option<T>)
+fn zero_or_one<T, F>(offset: usize, f: F) -> Option<(usize, T)>
 where
     F: Fn(usize) -> Option<(usize, T)>,
 {
     if let Some(x) = f(offset) {
-        let (new_offset, v) = x;
-        return (new_offset, Some(v));
+        return Some(x);
     }
 
-    (offset, None)
+    None
 }
 
 // TODO: these parser combinators are not using self at all. We can move
 // them out of the impl methods
-fn zero_or_more<T, F>(offset: usize, mut f: F) -> (usize, Option<Vec<T>>)
+fn zero_or_more<T, F>(offset: usize, mut f: F) -> Option<(usize, Vec<T>)>
 where
     F: FnMut(usize) -> Option<(usize, T)>,
 {
@@ -181,9 +180,9 @@ where
     }
 
     if parsed_values.len() > 0 {
-        return (new_offset, Some(parsed_values));
+        return Some((new_offset, parsed_values));
     } else {
-        return (offset, None);
+        return None;
     }
 }
 
@@ -349,19 +348,26 @@ impl<'a> Parser<'a> {
 
     fn transition(&self, offset: usize) -> Option<(usize, TransitionNode<'a>)> {
         let new_offset;
-        let (offset, event_option) = zero_or_one(offset, |offset| self.identifier(offset));
-        let mut event = "";
+        let (offset, event) =
+            zero_or_one(offset, |offset| self.identifier(offset)).unwrap_or((offset, ""));
         let (offset, _) = self.transition_arrow(offset)?;
         let (offset, target) = self.identifier(offset)?;
 
         let condition_name;
-        let mut action_names = None;
+        let action_names;
 
-        if let Some(en) = event_option {
-            event = en;
-            let (offset, cn) = zero_or_one(offset, |offset| self.condition(offset));
-            condition_name = cn;
-            let (offset, ans) = zero_or_more(offset, |offset| self.action(offset));
+        if event != "" {
+            let (offset, cn) =
+                zero_or_one(offset, |offset| self.condition(offset)).unwrap_or((offset, ""));
+            condition_name = if cn == "" { None } else { Some(cn) };
+            // because the variables in the tuple below are in the scope of the
+            // if statement, i can't just do `let (offset, action_names) = `.
+            // That action_names is then only scoped inside the if condition and
+            // does not change the action_names outside the if. So i have to
+            // first store the actions names in a temporary variable ans and
+            // then assign it to action_names from outer scope.
+            let (offset, ans) =
+                zero_or_more(offset, |offset| self.action(offset)).unwrap_or((offset, vec![]));
             action_names = ans;
             new_offset = offset;
         } else {
@@ -370,11 +376,9 @@ impl<'a> Parser<'a> {
             // a condition
             let (offset, condition_name_str) = self.condition(offset)?;
             condition_name = Some(condition_name_str);
-            let (offset, action_name_option) = zero_or_more(offset, |offset| self.action(offset));
-
-            if let Some(action_name_strings) = action_name_option {
-                action_names = Some(action_name_strings);
-            }
+            let (offset, ans) =
+                zero_or_more(offset, |offset| self.action(offset)).unwrap_or((offset, vec![]));
+            action_names = ans;
 
             new_offset = offset;
         }
@@ -397,27 +401,24 @@ impl<'a> Parser<'a> {
     // self.identifier()?;
     fn state_parser(&mut self, offset: usize) -> Option<(usize, StateNode<'a>)> {
         let (offset, id) = self.identifier(offset)?;
-        let (offset, is_parallel_state_option) =
-            zero_or_one(offset, |offset| self.parallel_state(offset));
-        // rust tip: Super way to get a value out of an option if we don't care
-        // about the absent value and have a default value as replacement.
-        let is_parallel_state = is_parallel_state_option.unwrap_or(false);
+        let (offset, is_parallel_state) =
+            zero_or_one(offset, |offset| self.parallel_state(offset)).unwrap_or((offset, false));
 
-        let (offset, is_final_state_option) = zero_or_one(offset, |o| self.final_state(o));
-        let is_final_state = is_final_state_option.unwrap_or(false);
+        let (offset, is_final_state) =
+            zero_or_one(offset, |o| self.final_state(o)).unwrap_or((offset, false));
 
-        let (offset, is_initial_state_option) = zero_or_one(offset, |o| self.initial_state(o));
-        let is_initial_state = is_initial_state_option.unwrap_or(false);
+        let (offset, is_initial_state) =
+            zero_or_one(offset, |o| self.initial_state(o)).unwrap_or((offset, false));
 
-        let (mut offset, is_indent_there_option) = zero_or_one(offset, |o| self.indent(o));
-        let is_indent_there = is_indent_there_option.unwrap_or(false);
+        let (mut offset, is_indent_there) =
+            zero_or_one(offset, |o| self.indent(o)).unwrap_or((offset, false));
         let mut transitions: Vec<TransitionNode<'a>> = vec![];
         let mut sub_states: Vec<(&'a str, StateNode<'a>)> = vec![];
 
         if is_indent_there {
             // Had to create a separate enum to hold either TransitionNode or
             // StateNode. And then it became super painful to take them apart.
-            let (new_offset, transitions_and_states_option) =
+            let (new_offset, transitions_and_states) =
                 zero_or_more(offset, |o| -> Option<(usize, TransitionOrState)> {
                     if let Some((no, x)) = self.transition(o) {
                         return Some((no, TransitionOrState::Transition(x)));
@@ -428,35 +429,35 @@ impl<'a> Parser<'a> {
                     }
 
                     return None;
-                });
+                })
+                .unwrap_or((offset, vec![]));
 
-            if let Some(transitions_and_states) = transitions_and_states_option {
-                // Had to clone the list because otherwise rust complains that
-                // the values are already moved when i try to get the states
-                // in the second filter pass
-                let transitions_and_states_clone = transitions_and_states.clone();
-                transitions = transitions_and_states
-                    .into_iter()
-                    .filter_map(|ts| match ts {
-                        // we can convert a vector to hashmap by having the vector as a
-                        // vector of tuples of (key, val)
-                        TransitionOrState::Transition(t) => Some(t),
-                        _ => None,
-                    })
-                    .collect();
-                sub_states = transitions_and_states_clone
-                    .into_iter()
-                    .filter_map(|ts| match ts {
-                        TransitionOrState::State(t) => Some((t.id, t)),
-                        _ => None,
-                    })
-                    .collect();
-            }
+            // Had to clone the list because otherwise rust complains that
+            // the values are already moved when i try to get the states
+            // in the second filter pass
+            let transitions_and_states_clone = transitions_and_states.clone();
+            transitions = transitions_and_states
+                .into_iter()
+                .filter_map(|ts| match ts {
+                    // we can convert a vector to hashmap by having the vector as a
+                    // vector of tuples of (key, val)
+                    TransitionOrState::Transition(t) => Some(t),
+                    _ => None,
+                })
+                .collect();
+            sub_states = transitions_and_states_clone
+                .into_iter()
+                .filter_map(|ts| match ts {
+                    TransitionOrState::State(t) => Some((t.id, t)),
+                    _ => None,
+                })
+                .collect();
 
             zero_or_more(new_offset, |o| self.dedent(o));
             offset = new_offset;
 
-            let (new_offset, _) = zero_or_one(offset, |o| self.dedent(o));
+            let (new_offset, _) =
+                zero_or_one(offset, |o| self.dedent(o)).unwrap_or((offset, false));
             offset = new_offset;
         }
 
@@ -534,19 +535,19 @@ mod tests {
                     event: "def",
                     target: "lmn",
                     cond: None,
-                    actions: None,
+                    actions: vec![],
                 },
                 TransitionNode {
                     event: "pasta",
                     target: "noodles",
                     cond: None,
-                    actions: None,
+                    actions: vec![],
                 },
                 TransitionNode {
                     event: "tried",
                     target: "that",
                     cond: None,
-                    actions: Some(vec!["andDoThis"]),
+                    actions: vec!["andDoThis"],
                 },
             ],
             states: vec![
@@ -562,13 +563,13 @@ mod tests {
                                 event: "",
                                 target: "ast",
                                 cond: Some("ifyes"),
-                                actions: None,
+                                actions: vec![],
                             },
                             TransitionNode {
                                 event: "",
                                 target: "lastState",
                                 cond: Some("ifno"),
-                                actions: None,
+                                actions: vec![],
                             },
                         ],
                         states: HashMap::new(),
@@ -586,13 +587,13 @@ mod tests {
                                 event: "opq",
                                 target: "rst",
                                 cond: Some("ifyes"),
-                                actions: None,
+                                actions: vec![],
                             },
                             TransitionNode {
                                 event: "uvw",
                                 target: "#abc.lastState",
                                 cond: None,
-                                actions: None,
+                                actions: vec![],
                             },
                         ],
                         states: vec![
@@ -635,13 +636,13 @@ mod tests {
                                 event: "",
                                 target: "ast",
                                 cond: Some("ifyes"),
-                                actions: None,
+                                actions: vec![],
                             },
                             TransitionNode {
                                 event: "",
                                 target: "lastState",
                                 cond: Some("ifno"),
-                                actions: None,
+                                actions: vec![],
                             },
                         ],
                         states: HashMap::new(),
