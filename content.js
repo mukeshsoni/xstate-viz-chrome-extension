@@ -181,6 +181,10 @@ function getFormattedJsCode() {
 // conditions of the unnamed states return true. In that case user can use the
 // named state to get of this state and go somewhere else.
 function eventArrayToObj(eventsArr) {
+  if (!eventsArr || eventsArr.length === 0) {
+    return undefined;
+  }
+
   return eventsArr.reduce((acc, item) => {
     // in case of transient states, we will have { '': { target: 'abc', cond: xyz } } kind of transitions. And they need to be merged for all '' appearances
     // They need to be merged into an array
