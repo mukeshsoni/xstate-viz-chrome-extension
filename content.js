@@ -8,7 +8,7 @@ import { Element, div, Button, Input } from "./components";
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 1000;
 let EDITOR_WIDTH = 400;
-let EDITOR_HEIGHT_RATIO = 50;
+let EDITOR_HEIGHT_RATIO = 70;
 
 const errorPaneId = "sketch-systems-error-pane";
 const successPaneId = "sketch-systems-success-message";
@@ -314,6 +314,16 @@ function WidthInput() {
   );
 }
 
+function updateEditorHeightRatio(e) {
+  const mainEditor = document.getElementById(mainEditorContainerId);
+  const jsEditor = document.getElementById(jsEditorContainerId);
+
+  const newRatio = e.target.value;
+
+  mainEditor.style.flex = newRatio;
+  jsEditor.style.flex = 100 - newRatio;
+}
+
 function EditorHeightAdjuster() {
   const MIN_RATIO = 0;
   const MAX_RATIO = 100;
@@ -338,15 +348,7 @@ function EditorHeightAdjuster() {
     ]
   );
 
-  inputEl.addEventListener("change", (e) => {
-    const mainEditor = document.getElementById(mainEditorContainerId);
-    const jsEditor = document.getElementById(jsEditorContainerId);
-
-    const newRatio = e.target.value;
-
-    mainEditor.style.flex = newRatio;
-    jsEditor.style.flex = 100 - newRatio;
-  });
+  inputEl.addEventListener("change", updateEditorHeightRatio);
 
   return inputEl;
 }
@@ -633,4 +635,5 @@ window.onerror = function (error, url, line) {
   }
 };
 
+updateEditorHeightRatio({ target: { value: EDITOR_HEIGHT_RATIO } });
 // setTimeout(hideXstateEditor, 200);
