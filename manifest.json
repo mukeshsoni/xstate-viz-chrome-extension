@@ -1,32 +1,27 @@
 {
-  "name": "xtate viz with sketch systems",
-  "version": "1.0",
-  "description": "This extension allows xstate visualzier users to write their statecharts in simpler indent based text language and converts it to the json format which xstate understands",
-  "permissions": ["tabs", "activeTab", "storage"],
+  "name": "Xstate vizualize addon",
+  "version": "0.0.1",
+  "description": "An addon for xstate.js.org/viz which allows writing state machine in simpler language",
   "page_action": {
     "default_icon": {
-      "16": "images/get_started16.png",
-      "32": "images/get_started32.png",
-      "48": "images/get_started48.png",
-      "128": "images/get_started128.png"
+      "16": "images/logo16.png",
+      "32": "images/logo32.png",
+      "48": "images/logo48.png",
+      "128": "images/logo128.png"
     }
-  },
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
   },
   "content_scripts": [
     {
-      "matches": ["https://xstate.js.org/viz/*", "http://localhost:3000/*"],
+      "matches": ["https://xstate.js.org/viz/*"],
       "js": ["inject.js"]
     }
   ],
   "web_accessible_resources": ["dist/*"],
   "manifest_version": 2,
   "icons": {
-    "16": "images/get_started16.png",
-    "32": "images/get_started32.png",
-    "48": "images/get_started48.png",
-    "128": "images/get_started128.png"
+    "16": "images/logo16.png",
+    "32": "images/logo32.png",
+    "48": "images/logo48.png",
+    "128": "images/logo128.png"
   }
 }

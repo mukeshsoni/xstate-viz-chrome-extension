@@ -21,7 +21,6 @@ const jsEditorContainerId = "js-editor-container";
 
 let header = document.querySelector("header");
 const headerHeight = header.clientHeight;
-let drawingSection = document.querySelector("section");
 
 // to use the webworker with rollup, i had to use a plugin
 // rollup-plugin-web-worker-loader
@@ -39,8 +38,6 @@ let drawingSection = document.querySelector("section");
 // a hard requirement right now in all browsers.
 async function run() {
   await init();
-
-  console.log("run", parse("abc"));
 }
 
 run();
@@ -468,7 +465,6 @@ let extensionPane = div(
   paneChildren
 );
 
-// drawingSection.parentNode.insertBefore(extensionPane, drawingSection.nextSibling);
 document.body.appendChild(extensionPane);
 
 let editor = ace.edit(sketchSystemsEditorId);

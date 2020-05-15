@@ -21,3 +21,7 @@
    warnings/errors on the side pane of the editor.
 10. Ace is not recognizing spread operator in our javascript pane and shows them
     as errors.
+11. We can also think about writing a reverse parser. It will take the xstate
+    json state machine and spit out our simple text based representation. Might
+    be helpful when someone opens this extension on a xstate.js.org/viz page
+    which already has an existing machine.
