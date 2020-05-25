@@ -25,3 +25,5 @@
     json state machine and spit out our simple text based representation. Might
     be helpful when someone opens this extension on a xstate.js.org/viz page
     which already has an existing machine.
+12. Add a button which generates code for xstate/test based model based tests.
+    Can generate code for testing-library or cypress
