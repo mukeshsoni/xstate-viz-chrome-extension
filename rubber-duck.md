@@ -27,3 +27,10 @@
     which already has an existing machine.
 12. Add a button which generates code for xstate/test based model based tests.
     Can generate code for testing-library or cypress
+13. The main reason we are injecting a script and not just using content-script
+    is because injected scripts have access to window object. See this article - 
+    https://medium.com/p/9ae278e2bdf8/responses/show
+    Why do we need the window object? I only saw it used in 2 places in our code. 
+    Let's see if we can change our script to normal content script. Then we can 
+    use the rust library which takes care of everything regarding wasm. We might 
+    also try out running rust code in web worker. 
