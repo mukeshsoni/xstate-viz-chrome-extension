@@ -1,5 +1,7 @@
 This is a chrome extension which adds an editor to [https://xstate.js.org/viz](https://xstate.js.org/viz). The editor allows writing statecharts in simpler textual language similar to [https://sketch.systems/](https://sketch.systems/).
 
+The extension can be found on chrome web store - https://chrome.google.com/webstore/detail/xstate-vizualize-addon/ahnfhdihbohipfombdpbgiaddecckafc or can be installed from the source code as described somewhere below.
+
 ![Textual statechart gif](images/sketch_to_xstate_viz.gif)
 
 To use the extension, clone this repository and load it as unpacked extension in chrome. 
